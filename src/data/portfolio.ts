@@ -40,31 +40,34 @@ export interface Certification {
   issuer: string;
   year: string;
   detail: string;
+  category: string;
+  href: string;
 }
 
 export const navItems: NavItem[] = [
   { label: "About", href: "#about" },
+  { label: "Education", href: "#education" },
   { label: "Skills", href: "#skills" },
   { label: "Projects", href: "#projects" },
   { label: "Experience", href: "#experience" },
-  { label: "Education", href: "#education" },
+  { label: "Certifications", href: "#certifications" },
   { label: "Contact", href: "#contact" },
 ];
 
 export const socialLinks: SocialLink[] = [
   {
     label: "GitHub",
-    href: "https://github.com/kartik-nilekani",
+    href: "https://github.com/Kartik01032005",
     note: "Source code & repositories",
   },
   {
     label: "LinkedIn",
-    href: "https://linkedin.com/in/kartik-nilekani",
+    href: "https://www.linkedin.com/in/kartik-nilekani-287a6329b/",
     note: "Professional network & timeline",
   },
   {
     label: "Mail",
-    href: "mailto:kartiknilekani@gmail.com",
+    href: "mailto:kartiknilekani568@gmail.com",
     note: "Direct communication",
   },
 ];
@@ -225,6 +228,13 @@ export const verifiedTimeline: TimelineItem[] = [
       "Architecting and shipping web platforms including BloodLink. Collaborating on system design, database schemas, and clean frontend UI implementation.",
   },
   {
+    date: "September 2024 — Present",
+    title: "Media Coordinator",
+    org: "Nexus Clubs",
+    description:
+      "Handle event photography and create promotional posters and visual content for club events.",
+  },
+  {
     date: "2023 — 2024",
     title: "Computer Science & Business Systems Scholar",
     org: "Srinivas Institute of Technology",
@@ -242,22 +252,36 @@ export const verifiedTimeline: TimelineItem[] = [
 
 export const certifications: Certification[] = [
   {
-    name: "Full-Stack Web Architecture & Engineering",
-    issuer: "Srinivas Institute of Technology",
-    year: "2024",
-    detail: "Comprehensive study of modern web frameworks, APIs, and client-server state management.",
+    name: "CCNA: Switching, Routing, and Wireless Essentials",
+    issuer: "Cisco Networking Academy",
+    year: "2026",
+    detail: "Hands-on networking fundamentals covering switching, routing, and wireless essentials.",
+    category: "Networking",
+    href: "/certificates/CCNA-_Switching-_Routing-_and_Wireless_Essentials_certificate_kartiknilekani568-gmail-com_41bbe724-ed98-4b92-a1c5-978c3e8bdefc.pdf",
   },
   {
-    name: "Python & Data Science Foundations",
-    issuer: "Technical Certification",
-    year: "2024",
-    detail: "Focus on algorithmic problem solving, dataset processing, and AI model integration.",
+    name: "CCNA ENSA Update",
+    issuer: "Cisco",
+    year: "2026",
+    detail: "Updated networking practice focused on Cisco Enterprise Network Architecture concepts.",
+    category: "Cybersecurity & Networking",
+    href: "/certificates/CCNAENSAUpdate20260808-22-ns4iwb%20(1).pdf",
   },
   {
-    name: "Database Systems & Design Principles",
-    issuer: "Academic Recognition",
-    year: "2023",
-    detail: "Relational database modeling, query optimization, and schema design.",
+    name: "Course Certificate",
+    issuer: "Professional Learning Program",
+    year: "2025",
+    detail: "Completion certificate for a structured technology and development learning course.",
+    category: "Technology",
+    href: "/certificates/Course_Certificate_1454085.pdf",
+  },
+  {
+    name: "Codsoft Certificate",
+    issuer: "Codsoft",
+    year: "2025",
+    detail: "Completion certificate for the Codsoft learning program and project-based development track.",
+    category: "Development",
+    href: "/certificates/Codsoft.pdf",
   },
 ];
 

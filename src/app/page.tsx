@@ -55,9 +55,9 @@ function SectionLabel({ index, children }: { index: string; children: React.Reac
 }
 
 function IconForLink({ label }: { label: string }) {
-  if (label === "GitHub") return <Github size={16} />;
-  if (label === "LinkedIn") return <Linkedin size={16} />;
-  return <Mail size={16} />;
+  if (label === "GitHub") return <Github size={18} />;
+  if (label === "LinkedIn") return <Linkedin size={18} />;
+  return <Mail size={18} />;
 }
 
 function Architecture() {
@@ -127,6 +127,7 @@ function ProjectCard({
             className="circle-button"
             aria-label={`Open case study for ${project.name}`}
             onClick={() => onOpen(project)}
+            suppressHydrationWarning
           >
             <ArrowUpRight size={18} />
           </button>
@@ -150,7 +151,7 @@ function ProjectCard({
               </span>
             ))}
           </div>
-          <button className="text-button" onClick={() => onOpen(project)}>
+          <button className="text-button" onClick={() => onOpen(project)} suppressHydrationWarning>
             View case study <MoveUpRight size={14} />
           </button>
         </div>
@@ -171,7 +172,7 @@ export default function Home() {
   const [sent, setSent] = useState(false);
 
   const sections = useMemo(
-    () => ["about", "skills", "projects", "experience", "education", "contact"],
+    () => ["about", "education", "skills", "projects", "experience", "certifications", "contact"],
     []
   );
 
@@ -233,7 +234,7 @@ export default function Home() {
   };
 
   return (
-    <div className="site-shell">
+    <div className="site-shell" suppressHydrationWarning>
       <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
         <a
           href="#top"
@@ -397,9 +398,37 @@ export default function Home() {
           </div>
         </section>
 
+        <section id="education" className="section-shell section-shell--light" aria-labelledby="education-title">
+          <div className="section-rail">
+            <SectionLabel index="02">Education & signals</SectionLabel>
+            <p className="rail-note">
+              Foundations for
+              <br />
+              the next build.
+            </p>
+          </div>
+          <div className="education-content">
+            <motion.div {...reveal(reduced)} className="education-card">
+              <div>
+                <p className="eyebrow">Current foundation</p>
+                <h2 id="education-title">
+                  B.E. — Computer Science
+                  <br />& Business Systems
+                </h2>
+                <p>Srinivas Institute of Technology</p>
+              </div>
+              <div className="education-card__year mono">
+                2023—2027
+                <br />
+                <span>Mangalore, India</span>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
         <section id="skills" className="section-shell section-shell--dark" aria-labelledby="skills-title">
           <div className="section-rail">
-            <SectionLabel index="02">Technical arsenal</SectionLabel>
+            <SectionLabel index="03">Technical arsenal</SectionLabel>
             <p className="rail-note">
               Tools chosen for
               <br />
@@ -437,7 +466,7 @@ export default function Home() {
 
         <section id="projects" className="section-shell section-shell--light projects-section" aria-labelledby="projects-title">
           <div className="section-rail">
-            <SectionLabel index="03">Selected projects</SectionLabel>
+            <SectionLabel index="04">Selected projects</SectionLabel>
             <p className="rail-note">
               From emergency response
               <br />
@@ -476,7 +505,7 @@ export default function Home() {
 
         <section id="experience" className="section-shell section-shell--dark" aria-labelledby="experience-title">
           <div className="section-rail">
-            <SectionLabel index="04">Experience</SectionLabel>
+            <SectionLabel index="05">Experience</SectionLabel>
             <p className="rail-note">
               Learning in public,
               <br />
@@ -514,57 +543,48 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="education" className="section-shell section-shell--light" aria-labelledby="education-title">
+        <section id="certifications" className="section-shell section-shell--light" aria-labelledby="certifications-title">
           <div className="section-rail">
-            <SectionLabel index="05">Education & signals</SectionLabel>
+            <SectionLabel index="06">Certifications</SectionLabel>
             <p className="rail-note">
-              Foundations for
+              Proof of active
               <br />
-              the next build.
+              learning.
             </p>
           </div>
-          <div className="education-content">
-            <motion.div {...reveal(reduced)} className="education-card">
-              <div>
-                <p className="eyebrow">Current foundation</p>
-                <h2 id="education-title">
-                  B.E. — Computer Science
-                  <br />& Business Systems
-                </h2>
-                <p>Srinivas Institute of Technology</p>
-              </div>
-              <div className="education-card__year mono">
-                2023—2027
-                <br />
-                <span>Mangalore, India</span>
-              </div>
+          <div className="cert-layout">
+            <motion.div {...reveal(reduced)}>
+              <p className="eyebrow">Selected credentials</p>
+              <h3 id="certifications-title">Signals of continued learning.</h3>
             </motion.div>
-            <div className="cert-layout">
-              <motion.div {...reveal(reduced)}>
-                <p className="eyebrow">Certifications</p>
-                <h3>Signals of continued learning.</h3>
-              </motion.div>
-              <div className="cert-list">
-                {certifications.map((cert: Certification, index: number) => (
-                  <motion.div
-                    key={cert.name}
-                    {...reveal(reduced, index * 0.05)}
-                    className="cert-row"
+            <div className="cert-card-grid">
+              {certifications.map((cert: Certification, index: number) => (
+                <motion.article
+                  key={cert.name}
+                  {...reveal(reduced, index * 0.05)}
+                  className="cert-card"
+                >
+                  <div className="cert-card__header">
+                    {cert.category && <span className="cert-card__category">{cert.category}</span>}
+                    <span className="cert-card__year mono">{cert.year}</span>
+                  </div>
+                  <div className="cert-card__body">
+                    <h4>{cert.name}</h4>
+                    <p>{cert.issuer}</p>
+                    <small>{cert.detail}</small>
+                  </div>
+                  <a
+                    className="cert-card__action"
+                    href={cert.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`View certificate for ${cert.name}`}
                   >
-                    <div className="cert-row__icon">
-                      <Check size={15} />
-                    </div>
-                    <div>
-                      <h4>{cert.name}</h4>
-                      <p>
-                        {cert.issuer} · {cert.year}
-                      </p>
-                      <small>{cert.detail}</small>
-                    </div>
-                    <ArrowUpRight size={15} className="cert-row__arrow" />
-                  </motion.div>
-                ))}
-              </div>
+                    View Certificate
+                    <ArrowUpRight size={14} />
+                  </a>
+                </motion.article>
+              ))}
             </div>
           </div>
         </section>
@@ -621,6 +641,7 @@ export default function Home() {
             <motion.form
               {...reveal(reduced, 0.12)}
               className="contact-form"
+              suppressHydrationWarning
               onSubmit={(e) => {
                 e.preventDefault();
                 setSent(true);
@@ -644,11 +665,11 @@ export default function Home() {
                 <>
                   <label htmlFor="name">
                     Name
-                    <input id="name" name="name" placeholder="Your name" required minLength={2} />
+                    <input id="name" name="name" placeholder="Your name" required minLength={2} suppressHydrationWarning />
                   </label>
                   <label htmlFor="email">
                     Email
-                    <input id="email" name="email" type="email" placeholder="you@example.com" required />
+                    <input id="email" name="email" type="email" placeholder="you@example.com" required suppressHydrationWarning />
                   </label>
                   <label htmlFor="message">
                     Message
@@ -661,7 +682,7 @@ export default function Home() {
                       minLength={10}
                     />
                   </label>
-                  <button className="button button--primary form-submit" type="submit">
+                  <button className="button button--primary form-submit" type="submit" suppressHydrationWarning>
                     Send message <Send size={15} />
                   </button>
                   <p className="form-note">
