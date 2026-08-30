@@ -112,3 +112,35 @@ temp/
 .webdev/
 
 .project-config.json
+
+# Secrets and credentials
+.env
+.env.*
+.env*.local
+*.env
+*.env.*
+!.env.example
+*.local
+*.secret
+*.secrets
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.jks
+*.crt
+*.cer
+*.pub
+*.id_rsa
+id_rsa*
+id_ed25519*
+*.token
+*.credentials
+**/credentials*.json
+**/*-credentials.json
+**/*secret*.json
+**/*secrets*.json
+**/*token*.json
+service-account*.json
+*.keystore
