@@ -2,10 +2,11 @@ import { useEffect } from "react";
 
 export default function useScrollParallax(
   ref: React.RefObject<HTMLElement | null>,
-  strength = 0.06
+  strength = 0.06,
+  disabled = false
 ) {
   useEffect(() => {
-    if (!ref?.current) return;
+    if (disabled || !ref?.current) return;
     if (typeof window === "undefined") return;
     const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;

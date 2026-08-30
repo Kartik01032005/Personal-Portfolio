@@ -61,7 +61,7 @@ export default function RootLayout({
     >
       <body suppressHydrationWarning>
         <ErrorBoundary>
-          <ThemeProvider defaultTheme="dark">
+          <ThemeProvider defaultTheme="light">
             <TooltipProvider>
               <Toaster />
               {children}

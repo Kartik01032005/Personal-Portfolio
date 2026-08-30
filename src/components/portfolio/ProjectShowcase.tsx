@@ -58,7 +58,7 @@ export function ProjectShowcase() {
               </div>
 
               <h3 className="project-title">{project.name}</h3>
-              <p className="project-subtitle">{project.subtitle}</p>
+              <p className="project-subtitle">{project.category}</p>
               <p className="project-desc">{project.description}</p>
 
               {/* Stack Pills */}
@@ -113,7 +113,7 @@ export function ProjectShowcase() {
                     <span className="modal-kicker">{selectedProject.kicker}</span>
                   </div>
                   <h2 className="modal-title">{selectedProject.name}</h2>
-                  <p className="modal-sub">{selectedProject.subtitle}</p>
+                  <p className="modal-sub">{selectedProject.category}</p>
                 </div>
                 <button
                   onClick={() => setSelectedProject(null)}
@@ -193,7 +193,7 @@ export function ProjectShowcase() {
                     <span>Key Capabilities & Subsystems</span>
                   </div>
                   <ul className="modal-features-list">
-                    {selectedProject.features.map((feat) => (
+                    {(selectedProject.features ?? []).map((feat) => (
                       <li key={feat} className="modal-feature-item">
                         <span className="feature-marker" />
                         <span>{feat}</span>
@@ -219,9 +219,9 @@ export function ProjectShowcase() {
 
               {/* Modal Footer */}
               <div className="case-study-modal__footer">
-                {selectedProject.githubUrl && (
+                {selectedProject.github && (
                   <a
-                    href={selectedProject.githubUrl}
+                    href={selectedProject.github}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="modal-footer-btn modal-footer-btn--gh"
