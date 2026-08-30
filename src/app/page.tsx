@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import Lenis from "lenis";
+import { motion, Variants } from "framer-motion";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -20,18 +21,63 @@ import {
   Award,
   BookOpen,
   Compass,
+  Sun,
+  Moon,
+  Layers,
+  Code2,
+  Cpu,
+  Database,
+  Terminal,
 } from "lucide-react";
 import {
   navItems,
   chapters,
   certifications,
   verifiedTimeline,
-  currentFocus,
   socialLinks,
 } from "@/data/portfolio";
-import { CinematicSanctuary } from "@/components/three/CinematicSanctuary";
+import { VideoBackground } from "@/components/video/VideoBackground";
 import { ProjectShowcase } from "@/components/portfolio/ProjectShowcase";
 import { SkillsGallery } from "@/components/portfolio/SkillsGallery";
+import { useTheme } from "@/contexts/ThemeContext";
+
+const sectionVariants: Variants = {
+  hidden: { opacity: 0, y: 32 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.85,
+      ease: [0.16, 1, 0.3, 1],
+      staggerChildren: 0.12,
+    },
+  },
+};
+
+const fadeUpVariants: Variants = {
+  hidden: { opacity: 0, y: 22 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.7,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+};
+
+const cardScaleVariants: Variants = {
+  hidden: { opacity: 0, y: 20, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.65,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+};
 
 export default function Home() {
   const [activeChapter, setActiveChapter] = useState(0);
@@ -39,6 +85,8 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [preloaderDone, setPreloaderDone] = useState(false);
   const [preloaderProgress, setPreloaderProgress] = useState(15);
+  const { theme, toggleTheme } = useTheme();
+
   const [formState, setFormState] = useState<{
     name: string;
     email: string;
@@ -55,8 +103,7 @@ export default function Home() {
   const lenisRef = useRef<Lenis | null>(null);
   const activeChapterRef = useRef<number>(0);
 
-  // Initialize Lenis smooth scroll — Lenis only provides inertia.
-  // Three.js reads scrollY directly in its own RAF, so we do NOT dispatch events here.
+  // Initialize Lenis smooth momentum scroll
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
@@ -69,17 +116,16 @@ export default function Home() {
     });
     lenisRef.current = lenis;
 
-    // Lenis needs its own standalone RAF to smooth the scroll position
     function raf(time: number) {
       lenis.raf(time);
       requestAnimationFrame(raf);
     }
     const rafId = requestAnimationFrame(raf);
 
-    // UI-only scroll state: sticky header + active chapter (no React render thrashing)
+    // Measure exact chapter anchor offsets
     let anchors: number[] = [];
     const measure = () => {
-      const ids = ["intro", "about", "projects", "skills", "experience", "contact"];
+      const ids = ["home", "about", "projects", "skills", "experience", "contact"];
       const secs = ids.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
       const vpH = window.innerHeight;
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - vpH);
@@ -108,15 +154,14 @@ export default function Home() {
       return anchors.length - 1;
     }
 
-    // Use lenis scroll event for UI state only (fires after Lenis processes each frame)
     const handleScroll = () => {
       const scrollY = window.scrollY;
 
-      // Stuck header — only set state on threshold cross
+      // Stuck header — only update state on threshold crossing
       const shouldBeStuck = scrollY > 40;
       setIsStuck((prev) => (prev !== shouldBeStuck ? shouldBeStuck : prev));
 
-      // Active chapter — only set state when chapter boundary actually changes
+      // Active chapter indicator — only update when chapter boundary changes
       const progress = progressFor(scrollY);
       const currentChapterIdx = Math.min(Math.max(0, Math.round(progress)), 5);
       if (currentChapterIdx !== activeChapterRef.current) {
@@ -155,7 +200,7 @@ export default function Home() {
     const el = document.getElementById(chapterId);
     if (el) {
       if (lenisRef.current) {
-        lenisRef.current.scrollTo(el, { duration: 1.4 });
+        lenisRef.current.scrollTo(el, { duration: 1.2 });
       } else {
         el.scrollIntoView({ behavior: "smooth" });
       }
@@ -205,8 +250,8 @@ export default function Home() {
 
   return (
     <div className="portfolio-experience">
-      {/* Three.js Procedural Sanctuary Canvas */}
-      <CinematicSanctuary onLoaded={() => setPreloaderProgress(100)} />
+      {/* Fullscreen Video Background */}
+      <VideoBackground onLoaded={() => setPreloaderProgress(100)} />
 
       {/* Atmospheric Overlays */}
       <div id="vignette" aria-hidden="true" />
@@ -226,7 +271,7 @@ export default function Home() {
             <i id="pre-fill" style={{ right: `${100 - preloaderProgress}%` }} suppressHydrationWarning />
           </div>
           <div className="pre-meta" suppressHydrationWarning>
-            <span>Raising the 3D Sanctuary</span>
+            <span>Entering Portfolio</span>
             <b>
               <span suppressHydrationWarning>{Math.min(100, preloaderProgress)}</span>%
             </b>
@@ -242,10 +287,10 @@ export default function Home() {
       >
         <a
           className="brand"
-          href="#intro"
+          href="#home"
           onClick={(e) => {
             e.preventDefault();
-            scrollToChapter("intro");
+            scrollToChapter("home");
           }}
         >
           <svg viewBox="0 0 44 44" fill="none" aria-hidden="true">
@@ -271,10 +316,21 @@ export default function Home() {
               }}
             >
               <span>{item.label}</span>
-              <span className="alt">{item.jp}</span>
+              <span className="alt">{item.label}</span>
             </a>
           ))}
         </nav>
+
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className="theme-toggle-btn"
+          aria-label={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          suppressHydrationWarning
+        >
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
 
         <button
           className={`nav-burger ${menuOpen ? "active" : ""}`}
@@ -289,125 +345,158 @@ export default function Home() {
 
       {/* Main Narrative Page Content */}
       <main className="page" id="top">
-        {/* ============================================================ CHAPTER 01: INTRO */}
-        <section className="hero" id="intro" data-cam="0">
-          <div className="hero-top">
-            <div className="eyebrow">
-              <span className="dot" /> Chapter 01 — The Threshold
-            </div>
-            <h1 className="display h-hero">
-              <span className="mask-line">
-                <span>Where systems</span>
-              </span>
-              <span className="mask-line">
-                <span>reveal the</span>
-              </span>
-              <span className="mask-line">
-                <span>unseen.</span>
-              </span>
-            </h1>
-            <p className="hero-sub body">
-              Kartik Nilekani — Computer Science & Business Systems Engineer.
-              Engineering practical software, intelligent models, and thoughtful digital architecture.
-            </p>
+        {/* ============================================================ 1. HOME */}
+        <motion.section
+          className="hero"
+          id="home"
+          data-cam="0"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={sectionVariants}
+        >
+          <div className="hero-top" style={{ maxWidth: "min(780px, 85vw)" }}>
+            <motion.div className="eyebrow" variants={fadeUpVariants}>
+              <span className="dot" /> Computer Science & Business Systems Engineer
+            </motion.div>
+            
+            <motion.h1
+              className="display h-hero"
+              variants={fadeUpVariants}
+              style={{
+                fontSize: "clamp(34px, 4.4vw, 68px)",
+                lineHeight: 1.04,
+                letterSpacing: "-0.02em",
+                fontWeight: 600,
+                color: "var(--bone)",
+              }}
+            >
+              KARTIK MANJUNATH NILEKANI
+            </motion.h1>
+
+            <motion.p
+              className="hero-sub body"
+              variants={fadeUpVariants}
+              style={{
+                fontSize: "clamp(16px, 1.25vw, 20px)",
+                color: "var(--bone)",
+                marginTop: "16px",
+                maxWidth: "600px",
+              }}
+            >
+              I build websites, applications, and AI-powered solutions.
+            </motion.p>
+
+            {/* Quick Action CTA Buttons */}
+            <motion.div className="hero-cta-group" variants={fadeUpVariants}>
+              <a
+                href="#projects"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToChapter("projects");
+                }}
+                className="hero-btn-primary"
+              >
+                <span>View My Work</span>
+                <ArrowDownRight size={15} />
+              </a>
+              <a
+                href="#contact"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToChapter("contact");
+                }}
+                className="hero-btn-secondary"
+              >
+                <span>Contact Me</span>
+                <ArrowUpRight size={15} />
+              </a>
+            </motion.div>
           </div>
 
           <div className="hero-spacer" />
 
-          {/* Quick-links / Chapter Selector Chips */}
-          <div className="hero-foot">
+          {/* Quick Section Selector Chips */}
+          <motion.div className="hero-foot" variants={fadeUpVariants}>
             <div className="hero-cue">
-              <span>Scroll to traverse chapters</span>
+              <span>Scroll to explore</span>
               <span className="track">
                 <i />
               </span>
             </div>
             <div className="chapters" id="chips" suppressHydrationWarning>
-              {chapters.slice(0, 4).map((ch, idx) => (
+              {navItems.slice(0, 4).map((item, idx) => (
                 <div
-                  key={ch.id}
+                  key={item.href}
                   className={`chip ${activeChapter === idx ? "on" : ""}`}
-                  onClick={() => scrollToChapter(ch.id)}
+                  onClick={() => scrollToChapter(item.href.replace("#", ""))}
                   suppressHydrationWarning
                 >
                   <span className="num" suppressHydrationWarning>
-                    {ch.num}
+                    {item.chapter}
                   </span>
                   <span className="tx" suppressHydrationWarning>
-                    <b>{ch.title}</b>
-                    <p>{ch.desc}</p>
+                    <b>{item.label}</b>
                   </span>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Floating Sanmon Peek Window */}
-          <a
-            className="peek"
-            href="#projects"
-            onClick={(e) => {
-              e.preventDefault();
-              scrollToChapter("projects");
-            }}
-            aria-label="Preview Selected Projects"
-          >
-            <span className="peek-fr" />
-            <span className="peek-play">
-              <svg viewBox="0 0 22 22" fill="none">
-                <path d="M8 5.6 16.4 11 8 16.4z" fill="#dfe7e0" />
-              </svg>
-            </span>
-            <span className="peek-cap">
-              <b className="jp">実績</b>
-              <i>Selected Works — BloodLink & VoxNav</i>
-            </span>
-          </a>
+          </motion.div>
 
           <div className="word-fb" aria-hidden="true">
             KARTIK
           </div>
+        </motion.section>
 
-          <div className="hero-side">
-            <span className="v jp">工学と知性</span>
-          </div>
-        </section>
-
-        {/* ============================================================ CHAPTER 02: ABOUT */}
-        <section className="sec" id="about" data-cam="1">
-          <div className="sec-head">
+        {/* ============================================================ 2. ABOUT */}
+        <motion.section
+          className="sec"
+          id="about"
+          data-cam="1"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={sectionVariants}
+        >
+          <motion.div className="sec-head" variants={fadeUpVariants}>
             <span className="k">
-              <b>02</b> — Foundations
+              <b>02</b> — About
             </span>
             <span className="rule" />
-            <span className="k jp">概要</span>
-          </div>
+            <span className="k">ABOUT ME</span>
+          </motion.div>
 
           <div className="gate-grid">
-            <h2 className="display h-sec">
-              Signal over spectacle. Useful software built on clear problems.
-            </h2>
-            <div className="gate-copy">
-              <p className="lead">
-                I am a Computer Science & Business Systems scholar at Srinivas Institute of Technology,
-                passionate about bridging technical rigor with real-world utility. My focus spans full-stack
-                development, intelligent system architectures, graph algorithms, and accessible interaction design.
-              </p>
-              <p className="body">
-                Whether architecting real-time emergency healthcare networks like BloodLink, developing hands-free
-                speech command layers in VoxNav, or modeling topological pathfinding graphs in PathGrid, I build
-                with measured restraint: clean code contracts, robust database schemas, and intuitive interfaces.
+            <motion.h2 className="display h-sec" variants={fadeUpVariants}>
+              ABOUT ME
+            </motion.h2>
+            <motion.div className="gate-copy" variants={fadeUpVariants}>
+              <p className="lead" style={{ fontSize: "clamp(16px, 1.2vw, 19px)", lineHeight: 1.75 }}>
+                I&rsquo;m a Computer Science & Business Systems student at Srinivas Institute of Technology.
+                I enjoy building software, learning new technologies, and turning ideas into useful products.
               </p>
 
-              <div className="focus-areas-block">
-                <h4>Current Research & Engineering Focus</h4>
-                <ul className="focus-list">
-                  {currentFocus.map((item) => (
-                    <li key={item}>
-                      <span className="focus-bullet" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
+              <div className="focus-areas-block" style={{ marginTop: "28px" }}>
+                <h4 style={{ fontSize: "12px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--vermilion)", fontWeight: 600 }}>
+                  WHAT I LIKE TO BUILD
+                </h4>
+                <ul className="focus-list" style={{ marginTop: "14px" }}>
+                  <li>
+                    <span className="focus-bullet" />
+                    <span>Full-Stack Applications</span>
+                  </li>
+                  <li>
+                    <span className="focus-bullet" />
+                    <span>AI-Powered Applications</span>
+                  </li>
+                  <li>
+                    <span className="focus-bullet" />
+                    <span>Web Experiences</span>
+                  </li>
+                  <li>
+                    <span className="focus-bullet" />
+                    <span>Problem-Solving Systems</span>
+                  </li>
                 </ul>
               </div>
 
@@ -418,19 +507,20 @@ export default function Home() {
                   e.preventDefault();
                   scrollToChapter("projects");
                 }}
+                style={{ marginTop: "24px" }}
               >
-                <span>Explore Selected Works</span>
+                <span>View Featured Projects</span>
                 <span className="ar">
                   <svg viewBox="0 0 14 14" fill="none">
                     <path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" strokeWidth="1.3" />
                   </svg>
                 </span>
               </a>
-            </div>
+            </motion.div>
           </div>
 
           {/* Key Metrics Band */}
-          <div className="gate-stats">
+          <motion.div className="gate-stats" variants={cardScaleVariants}>
             <div>
               <b>04+</b>
               <span>Years of Code</span>
@@ -447,73 +537,100 @@ export default function Home() {
               <b>∞</b>
               <span>Curiosity</span>
             </div>
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
-        {/* ============================================================ CHAPTER 03: PROJECTS */}
-        <section className="sec" id="projects" data-cam="2">
-          <div className="sec-head">
+        {/* ============================================================ 3. PROJECTS */}
+        <motion.section
+          className="sec"
+          id="projects"
+          data-cam="2"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.12 }}
+          variants={sectionVariants}
+        >
+          <motion.div className="sec-head" variants={fadeUpVariants}>
             <span className="k">
-              <b>03</b> — Selected Works
+              <b>03</b> — Projects
             </span>
             <span className="rule" />
-            <span className="k jp">実績</span>
-          </div>
+            <span className="k">PROJECTS</span>
+          </motion.div>
 
-          <div className="cur-head">
-            <h2 className="display h-sec">Engineered platforms with measurable impact.</h2>
-            <p className="body-lg">
-              Each project represents an end-to-end engineered solution to a concrete problem,
-              combining algorithmic efficiency, modular APIs, and intuitive user experiences.
+          <motion.div className="cur-head" variants={fadeUpVariants}>
+            <h2 className="display h-sec">PROJECTS</h2>
+            <p className="body-lg" style={{ fontSize: "17px", color: "var(--bone-dim)" }}>
+              Things I&rsquo;ve built.
             </p>
-          </div>
+          </motion.div>
 
-          {/* Project Showcase with Scissor Viewports and Case Studies */}
+          {/* Project Showcase with Modals & Architecture */}
           <ProjectShowcase />
-        </section>
+        </motion.section>
 
-        {/* ============================================================ CHAPTER 04: SKILLS */}
-        <section className="sec" id="skills" data-cam="3">
-          <div className="sec-head">
+        {/* ============================================================ 4. SKILLS (LOCKED & UNTOUCHED) */}
+        <motion.section
+          className="sec"
+          id="skills"
+          data-cam="3"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.12 }}
+          variants={sectionVariants}
+        >
+          <motion.div className="sec-head" variants={fadeUpVariants}>
             <span className="k">
               <b>04</b> — Sacred Craft
             </span>
             <span className="rule" />
             <span className="k jp">技術</span>
-          </div>
+          </motion.div>
 
-          <div className="cur-head">
+          <motion.div className="cur-head" variants={fadeUpVariants}>
             <h2 className="display h-sec">A disciplined technical arsenal.</h2>
             <p className="body-lg">
               Explore my verified stack across programming languages, full-stack frameworks,
               AI toolchains, database engines, and core software engineering disciplines.
             </p>
-          </div>
+          </motion.div>
 
-          {/* Interactive Pro Skills Catalog Component */}
+          {/* Interactive Pro Skills Catalog Component — 100% LOCKED */}
           <SkillsGallery />
-        </section>
+        </motion.section>
 
-        {/* ============================================================ CHAPTER 05: EXPERIENCE & CERTIFICATIONS */}
-        <section className="sec" id="experience" data-cam="4">
-          <div className="sec-head">
+        {/* ============================================================ 5. EXPERIENCE & CERTIFICATIONS */}
+        <motion.section
+          className="sec"
+          id="experience"
+          data-cam="4"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.12 }}
+          variants={sectionVariants}
+        >
+          <motion.div className="sec-head" variants={fadeUpVariants}>
             <span className="k">
-              <b>05</b> — Timeline & Credentials
+              <b>05</b> — Experience
             </span>
             <span className="rule" />
-            <span className="k jp">経歴</span>
-          </div>
+            <span className="k">EXPERIENCE & CERTIFICATIONS</span>
+          </motion.div>
+
+          <motion.div className="cur-head" variants={fadeUpVariants} style={{ marginBottom: "32px" }}>
+            <h2 className="display h-sec">EXPERIENCE</h2>
+          </motion.div>
 
           <div className="timeline-cert-grid">
             {/* Timeline Column */}
-            <div className="timeline-column">
+            <motion.div className="timeline-column" variants={fadeUpVariants}>
               <h3 className="section-subtitle">
                 <Compass size={16} />
-                <span>Verified Milestones & Roles</span>
+                <span>Professional Roles & Education</span>
               </h3>
               <div className="timeline-list">
                 {verifiedTimeline.map((item, i) => (
-                  <div key={i} className="timeline-card">
+                  <motion.div key={i} className="timeline-card" variants={cardScaleVariants}>
                     <div className="timeline-card__top">
                       <span className="timeline-date">{item.date}</span>
                       {item.badge && <span className="timeline-badge">{item.badge}</span>}
@@ -521,25 +638,26 @@ export default function Home() {
                     <h4 className="timeline-title">{item.title}</h4>
                     <p className="timeline-org">{item.org}</p>
                     <p className="timeline-desc">{item.description}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             {/* Certifications Column */}
-            <div className="cert-column">
+            <motion.div className="cert-column" variants={fadeUpVariants}>
               <h3 className="section-subtitle">
                 <Award size={16} />
-                <span>Formal Certifications & Credentials</span>
+                <span>CERTIFICATIONS</span>
               </h3>
               <div className="cert-list">
                 {certifications.map((cert, i) => (
-                  <a
+                  <motion.a
                     key={i}
                     href={cert.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="cert-card"
+                    variants={cardScaleVariants}
                   >
                     <div className="cert-card__header">
                       <span className="cert-cat">{cert.category}</span>
@@ -552,24 +670,40 @@ export default function Home() {
                       <span className="cert-view-text">View Certificate PDF</span>
                       <ArrowUpRight size={14} className="cert-arrow" />
                     </div>
-                  </a>
+                  </motion.a>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
 
-        {/* ============================================================ CHAPTER 06: CONTACT */}
-        <section className="sec fin" id="contact" data-cam="5">
-          <div className="eyebrow">Chapter 06 — Afterlight</div>
-          <h2 className="display">Let&rsquo;s Build Something Resilient.</h2>
-          <p className="body-lg">
-            Whether you have an interesting software engineering opportunity, an open-source collaboration,
-            or an intelligent systems project, my inbox is always open.
-          </p>
+        {/* ============================================================ 6. CONTACT */}
+        <motion.section
+          className="sec fin"
+          id="contact"
+          data-cam="5"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={sectionVariants}
+        >
+          <motion.div className="sec-head" variants={fadeUpVariants}>
+            <span className="k">
+              <b>06</b> — Contact
+            </span>
+            <span className="rule" />
+            <span className="k">CONTACT</span>
+          </motion.div>
+
+          <motion.h2 className="display" variants={fadeUpVariants} style={{ fontSize: "clamp(30px, 3.8vw, 54px)" }}>
+            Let&rsquo;s build something.
+          </motion.h2>
+          <motion.p className="body-lg" variants={fadeUpVariants} style={{ maxWidth: "560px", color: "var(--bone-dim)" }}>
+            Have an idea, project, or opportunity? Let&rsquo;s connect.
+          </motion.p>
 
           {/* Direct Social Links */}
-          <div className="contact-links-row">
+          <motion.div className="contact-links-row" variants={fadeUpVariants}>
             {socialLinks.map((link) => (
               <a
                 key={link.label}
@@ -595,10 +729,10 @@ export default function Home() {
               <span>Resume PDF</span>
               <ArrowUpRight size={13} />
             </a>
-          </div>
+          </motion.div>
 
           {/* Interactive Contact Form */}
-          <div className="contact-form-container" suppressHydrationWarning>
+          <motion.div className="contact-form-container" variants={cardScaleVariants} suppressHydrationWarning>
             <form onSubmit={handleContactSubmit} className="cinematic-contact-form" suppressHydrationWarning>
               <div className="form-row-2" suppressHydrationWarning>
                 <div className="form-field" suppressHydrationWarning>
@@ -649,7 +783,7 @@ export default function Home() {
                 >
                   <Send size={15} />
                   <span>
-                    {formState.status === "submitting" ? "Transmitting..." : "Send Dispatch"}
+                    {formState.status === "submitting" ? "Transmitting..." : "Send Message"}
                   </span>
                 </button>
 
@@ -665,23 +799,23 @@ export default function Home() {
                 )}
               </div>
             </form>
-          </div>
+          </motion.div>
 
           <a
             className="cta"
-            href="#intro"
+            href="#home"
             onClick={(e) => {
               e.preventDefault();
-              scrollToChapter("intro");
+              scrollToChapter("home");
             }}
           >
             <i />
-            <span>Return to Threshold</span>
+            <span>Back to Top</span>
             <svg viewBox="0 0 14 14" fill="none" width="13" height="13">
               <path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" strokeWidth="1.3" />
             </svg>
           </a>
-        </section>
+        </motion.section>
 
         {/* ============================================================ FOOTER */}
         <footer className="foot" data-cam="6">
@@ -692,30 +826,29 @@ export default function Home() {
                 <path d="M5 13h34M9 18.4h26M22 8.5v27" stroke="#dfe7e0" strokeWidth="1.5" />
               </svg>
               <p>
-                A cinematic interactive Three.js portfolio for Kartik Nilekani.
-                Computer Science & Business Systems Engineer.
+                Kartik Manjunath Nilekani — Computer Science & Business Systems Engineer.
               </p>
             </div>
             <div>
-              <h4>Chapters</h4>
+              <h4>Navigation</h4>
               <ul>
-                {chapters.map((ch) => (
-                  <li key={ch.id}>
+                {navItems.map((item) => (
+                  <li key={item.href}>
                     <a
-                      href={`#${ch.id}`}
+                      href={item.href}
                       onClick={(e) => {
                         e.preventDefault();
-                        scrollToChapter(ch.id);
+                        scrollToChapter(item.href.replace("#", ""));
                       }}
                     >
-                      {ch.num} — {ch.title}
+                      {item.label}
                     </a>
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4>Key Projects</h4>
+              <h4>Projects</h4>
               <ul>
                 <li>
                   <a
@@ -753,7 +886,7 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h4>Networks</h4>
+              <h4>Connect</h4>
               <ul>
                 <li>
                   <a href="https://github.com/Kartik01032005" target="_blank" rel="noopener noreferrer">
@@ -776,21 +909,20 @@ export default function Home() {
 
           <div className="foot-base">
             <span>© 2026 Kartik Nilekani — All rights reserved</span>
-            <span className="jp">工学と知性・静寂と構造</span>
-            <span>Next.js · Three.js WebGL · Framer Motion</span>
+            <span>Next.js · React · Framer Motion</span>
           </div>
         </footer>
       </main>
 
-      {/* Chapter Progress Rail */}
+      {/* Section Progress Rail */}
       <div className="rail" id="rail" suppressHydrationWarning>
-        {chapters.map((ch, idx) => (
+        {navItems.map((item, idx) => (
           <button
-            key={ch.id}
+            key={item.href}
             className={activeChapter === idx ? "on" : ""}
-            title={`${ch.num} — ${ch.title}`}
-            aria-label={`Chapter ${ch.num}: ${ch.title}`}
-            onClick={() => scrollToChapter(ch.id)}
+            title={`${item.chapter} — ${item.label}`}
+            aria-label={`Section ${item.chapter}: ${item.label}`}
+            onClick={() => scrollToChapter(item.href.replace("#", ""))}
             suppressHydrationWarning
           >
             <i suppressHydrationWarning />

@@ -70,12 +70,12 @@ export interface Certification {
 }
 
 export const navItems: NavItem[] = [
-  { label: "Intro", href: "#intro", jp: "序幕", chapter: "01" },
-  { label: "About", href: "#about", jp: "概要", chapter: "02" },
-  { label: "Projects", href: "#projects", jp: "実績", chapter: "03" },
-  { label: "Skills", href: "#skills", jp: "技術", chapter: "04" },
-  { label: "Experience", href: "#experience", jp: "経歴", chapter: "05" },
-  { label: "Contact", href: "#contact", jp: "連絡", chapter: "06" },
+  { label: "Home", href: "#home", chapter: "01" },
+  { label: "About", href: "#about", chapter: "02" },
+  { label: "Projects", href: "#projects", chapter: "03" },
+  { label: "Skills", href: "#skills", chapter: "04" },
+  { label: "Experience", href: "#experience", chapter: "05" },
+  { label: "Contact", href: "#contact", chapter: "06" },
 ];
 
 export const socialLinks: SocialLink[] = [
@@ -107,11 +107,11 @@ export const projects: Project[] = [
   {
     id: "bloodlink",
     index: "01",
-    kicker: "Emergency Blood & Resource Network",
+    kicker: "Emergency Blood Network",
     name: "BloodLink",
-    subtitle: "Real-time Donor Dispatch & Hospital Logistics",
+    subtitle: "A platform that helps people find blood donors during emergencies.",
     description:
-      "A real-time emergency blood donation matching and logistics platform built to bridge critical time gaps between donors, hospitals, and recipients.",
+      "A platform that helps people find blood donors during emergencies.",
     problem:
       "Emergency blood requests often suffer from communication delays, fragmented donor databases, and lack of real-time location coordination during critical hours.",
     solution:
@@ -148,11 +148,11 @@ export const projects: Project[] = [
   {
     id: "voxnav",
     index: "02",
-    kicker: "Voice Interface & Command Parser",
+    kicker: "Voice Navigation Layer",
     name: "VoxNav Interface",
-    subtitle: "Accessible Natural Voice Navigation Layer",
+    subtitle: "A voice-based interface for navigating websites naturally.",
     description:
-      "A hands-free web navigation and command execution engine that turns natural spoken directives into precise component actions.",
+      "A voice-based interface for navigating websites naturally.",
     problem:
       "Standard web interfaces depend heavily on pointer interactions, creating friction for hands-free environments and accessible computing contexts.",
     solution:
@@ -186,11 +186,11 @@ export const projects: Project[] = [
   {
     id: "pathgrid",
     index: "03",
-    kicker: "Spatial Campus Wayfinding Graph",
+    kicker: "Spatial Navigation System",
     name: "PathGrid Spatial Map",
-    subtitle: "Topological Route Optimization Visualizer",
+    subtitle: "A smart navigation system for finding routes efficiently.",
     description:
-      "An interactive topological graph visualizer and pathfinding system designed for multi-building campus navigation.",
+      "A smart navigation system for finding routes efficiently.",
     problem:
       "Traditional static maps fail to handle complex multi-floor pathways, building access restrictions, or accessible ramp routing.",
     solution:
