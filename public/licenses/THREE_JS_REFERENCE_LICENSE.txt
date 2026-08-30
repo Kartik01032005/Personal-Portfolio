@@ -1,0 +1,31 @@
+MIT License
+
+Copyright (c) 2026 Meng To
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+PORTFOLIO ATTRIBUTION & VERIFICATION NOTICE:
+The 3D procedural WebGL scene, procedural canvas texture algorithms (cedar wood,
+slate stone, weathered lacquer, granite, moon maria, sky, roof tiles), instanced
+maple leaf particle systems, Catmull-Rom camera spline progression, custom
+ACES tonemapping post-processing shader, and interactive cloth ripple physics
+used in this portfolio are adapted from the work of Meng To under the MIT License.
+All underlying code and algorithms are self-contained procedural WebGL/Canvas
+implementations and are fully permissive for public deployment.

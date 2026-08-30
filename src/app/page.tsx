@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -11,764 +11,719 @@ import {
   Linkedin,
   Mail,
   Menu,
-  MoveUpRight,
-  Radio,
-  Send,
   X,
+  FileText,
+  Send,
+  Sparkles,
+  ExternalLink,
+  Shield,
+  Award,
+  BookOpen,
+  Compass,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
-  certifications,
-  Certification,
-  currentFocus,
   navItems,
-  NavItem,
-  projects,
-  Project,
-  skillGroups,
-  SkillGroup,
-  socialLinks,
-  SocialLink,
+  chapters,
+  certifications,
   verifiedTimeline,
-  TimelineItem,
+  currentFocus,
+  socialLinks,
 } from "@/data/portfolio";
-
-const cinematicEasing = [0.22, 1, 0.36, 1];
-
-const reveal = (reduced: boolean | null | undefined, delay = 0) =>
-  reduced
-    ? {}
-    : {
-        initial: { opacity: 0, y: 36, scale: 0.996 },
-        whileInView: { opacity: 1, y: 0, scale: 1 },
-        viewport: { once: true, amount: 0.18 },
-        transition: { duration: 0.9, delay, ease: cinematicEasing as any },
-      };
-
-function SectionLabel({ index, children }: { index: string; children: React.ReactNode }) {
-  return (
-    <div className="section-label">
-      <span className="section-label__index">{index}</span>
-      <span>{children}</span>
-    </div>
-  );
-}
-
-function IconForLink({ label }: { label: string }) {
-  if (label === "GitHub") return <Github size={18} />;
-  if (label === "LinkedIn") return <Linkedin size={18} />;
-  return <Mail size={18} />;
-}
-
-function Architecture() {
-  const nodes = ["User", "Frontend", "API layer", "Backend", "Database"];
-  return (
-    <div className="architecture" aria-label="BloodLink architecture: User to Frontend to API layer to Backend to Database">
-      <div className="architecture__header">
-        <span>System sketch</span>
-        <span className="mono">bloodlink / v1</span>
-      </div>
-      <div className="architecture__flow">
-        {nodes.map((node: string, index: number) => (
-          <div className="architecture__node-wrap" key={node}>
-            <div className={`architecture__node ${index === nodes.length - 1 ? "is-final" : ""}`}>
-              <span className="architecture__dot" />
-              {node}
-            </div>
-            {index < nodes.length - 1 && (
-              <div className="architecture__connector">
-                <span />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="architecture__integrations">
-        <span>External APIs</span>
-        <span>Real-time services</span>
-        <span>Auth layer</span>
-      </div>
-    </div>
-  );
-}
-
-function ProjectCard({
-  project,
-  onOpen,
-  reduced,
-}: {
-  project: Project;
-  onOpen: (project: Project) => void;
-  reduced: boolean | null | undefined;
-}) {
-  return (
-    <motion.article className={`project-card project-card--${project.accent}`} {...reveal(reduced)}>
-      <div className="project-card__media">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <motion.img
-          src={project.image}
-          alt={`${project.name} conceptual visual`}
-          loading="lazy"
-          style={{ willChange: "transform, opacity" }}
-          whileHover={reduced ? undefined : { scale: 1.045, translateY: -6 }}
-          transition={{ duration: 0.7, ease: cinematicEasing as any }}
-        />
-        <div className="project-card__media-overlay" />
-        <span className="project-card__index">{project.index}</span>
-        <span className="project-card__media-note">selected work / {project.kicker}</span>
-      </div>
-      <div className="project-card__body">
-        <div className="project-card__heading">
-          <div>
-            <p className="eyebrow">{project.kicker}</p>
-            <h3>{project.name}</h3>
-          </div>
-          <button
-            className="circle-button"
-            aria-label={`Open case study for ${project.name}`}
-            onClick={() => onOpen(project)}
-            suppressHydrationWarning
-          >
-            <ArrowUpRight size={18} />
-          </button>
-        </div>
-        <p className="project-card__description">{project.description}</p>
-        <div className="project-card__details">
-          <div>
-            <span className="detail-label">Problem</span>
-            <p>{project.problem}</p>
-          </div>
-          <div>
-            <span className="detail-label">Solution</span>
-            <p>{project.solution}</p>
-          </div>
-        </div>
-        <div className="project-card__footer">
-          <div className="tag-row">
-            {project.stack.map((item: string) => (
-              <span className="tag" key={item}>
-                {item}
-              </span>
-            ))}
-          </div>
-          <button className="text-button" onClick={() => onOpen(project)} suppressHydrationWarning>
-            View case study <MoveUpRight size={14} />
-          </button>
-        </div>
-      </div>
-    </motion.article>
-  );
-}
+import { CinematicSanctuary } from "@/components/three/CinematicSanctuary";
+import { ProjectShowcase } from "@/components/portfolio/ProjectShowcase";
+import { SkillsGallery } from "@/components/portfolio/SkillsGallery";
 
 export default function Home() {
-  const reduced = useReducedMotion();
-  const heroSignalRef = useRef<HTMLDivElement | null>(null);
-  const heroOrbitOneRef = useRef<HTMLDivElement | null>(null);
-  const heroOrbitTwoRef = useRef<HTMLDivElement | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeChapter, setActiveChapter] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("about");
-  const [scrolled, setScrolled] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [sent, setSent] = useState(false);
+  const [preloaderDone, setPreloaderDone] = useState(false);
+  const [preloaderProgress, setPreloaderProgress] = useState(15);
+  const [formState, setFormState] = useState<{
+    name: string;
+    email: string;
+    message: string;
+    status: "idle" | "submitting" | "success" | "error";
+    errorMsg?: string;
+  }>({
+    name: "",
+    email: "",
+    message: "",
+    status: "idle",
+  });
 
-  const sections = useMemo(
-    () => ["about", "education", "skills", "projects", "experience", "certifications", "contact"],
-    []
-  );
-
+  // Calculate scroll position across chapters
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 24);
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight <= 0) return;
+
+      const progress = (scrollY / docHeight) * (chapters.length - 1);
+      setScrollProgress(progress);
+
+      const currentChapterIdx = Math.min(
+        Math.max(0, Math.round(progress)),
+        chapters.length - 1
+      );
+      setActiveChapter(currentChapterIdx);
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
-    const observer = new IntersectionObserver(
-      (entries) =>
-        entries.forEach(
-          (entry) => entry.isIntersecting && setActiveSection(entry.target.id)
-        ),
-      { rootMargin: "-28% 0px -62% 0px" }
-    );
-    sections.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      observer.disconnect();
-    };
-  }, [sections]);
+    handleScroll();
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSelectedProject(null);
-        setMenuOpen(false);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // lazy-load parallax hook client-side only
+  // Preloader progress animation
   useEffect(() => {
-    let mounted = true;
-    if (typeof window === "undefined" || reduced) return;
-    // dynamic import to avoid SSR issues
-    import("@/hooks/useScrollParallax").then((m) => {
-      if (!mounted) return;
-      try {
-        const useScrollParallax = m.default;
-        useScrollParallax(heroSignalRef, 0.06);
-        useScrollParallax(heroOrbitOneRef, 0.035);
-        useScrollParallax(heroOrbitTwoRef, 0.05);
-      } catch (e) {
-        // noop
-      }
-    });
-    return () => {
-      mounted = false;
-    };
-  }, [reduced]);
+    const interval = setInterval(() => {
+      setPreloaderProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setPreloaderDone(true), 400);
+          return 100;
+        }
+        return prev + Math.floor(Math.random() * 18 + 12);
+      });
+    }, 120);
 
-  const jumpTo = (href: string) => {
-    setMenuOpen(false);
-    document.querySelector(href)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+    return () => clearInterval(interval);
+  }, []);
+
+  const scrollToChapter = (chapterId: string) => {
+    const el = document.getElementById(chapterId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+      setMenuOpen(false);
+    }
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formState.name || !formState.email || !formState.message) return;
+
+    setFormState((prev) => ({ ...prev, status: "submitting" }));
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formState.name,
+          email: formState.email,
+          message: formState.message,
+        }),
+      });
+
+      if (res.ok) {
+        setFormState({
+          name: "",
+          email: "",
+          message: "",
+          status: "success",
+        });
+      } else {
+        setFormState((prev) => ({
+          ...prev,
+          status: "error",
+          errorMsg: "Message delivery could not be completed. Please reach out directly via email.",
+        }));
+      }
+    } catch {
+      setFormState((prev) => ({
+        ...prev,
+        status: "error",
+        errorMsg: "Network error occurred. Please contact via email.",
+      }));
+    }
   };
 
   return (
-    <div className="site-shell" suppressHydrationWarning>
-      <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
+    <div className="portfolio-experience">
+      {/* Three.js Procedural Sanctuary Canvas */}
+      <CinematicSanctuary
+        scrollProgress={scrollProgress}
+        activeChapter={activeChapter}
+        onLoaded={() => setPreloaderProgress(100)}
+      />
+
+      {/* Atmospheric Overlays */}
+      <div id="vignette" aria-hidden="true" />
+      <div id="grain" aria-hidden="true" />
+
+      {/* Preloader */}
+      <div id="pre" className={preloaderDone ? "done" : ""}>
+        <div className="pre-in">
+          <div className="pre-mark">
+            <svg viewBox="0 0 44 44" fill="none" aria-hidden="true">
+              <circle cx="22" cy="24" r="9.5" stroke="#e0231c" stroke-width="1.2" />
+              <path d="M6 12h32M9.5 17h25M22 8v28" stroke="#dfe7e0" stroke-width="1.2" />
+            </svg>
+          </div>
+          <div className="pre-jp jp">神域の静寂</div>
+          <div className="pre-bar">
+            <i id="pre-fill" style={{ right: `${100 - preloaderProgress}%` }} />
+          </div>
+          <div className="pre-meta">
+            <span>Raising the 3D Sanctuary</span>
+            <b>
+              <span>{Math.min(100, preloaderProgress)}</span>%
+            </b>
+          </div>
+        </div>
+      </div>
+
+      {/* Primary Navigation Bar */}
+      <header className={`nav ${scrollProgress > 0.1 ? "stuck" : ""} ${menuOpen ? "menu-open" : ""}`} id="nav">
         <a
-          href="#top"
-          className="wordmark"
+          className="brand"
+          href="#intro"
           onClick={(e) => {
             e.preventDefault();
-            jumpTo("#top");
+            scrollToChapter("intro");
           }}
-          aria-label="Kartik home"
         >
-          <span className="wordmark__mark">K</span>
-          <span>
-            Kartik<span className="wordmark__period">.</span>
+          <svg viewBox="0 0 44 44" fill="none" aria-hidden="true">
+            <circle cx="22" cy="25" r="8.6" fill="#e0231c" fillOpacity=".9" />
+            <path d="M5 13h34M9 18.4h26M22 8.5v27" stroke="#dfe7e0" strokeWidth="1.5" />
+            <path d="M14 35.5h16" stroke="#dfe7e0" strokeWidth="1.2" strokeOpacity=".6" />
+          </svg>
+          <span className="brand-tx">
+            <b>KARTIK</b>
+            <i>CS & BUSINESS SYSTEMS</i>
           </span>
         </a>
-        <nav className={`site-nav__links ${menuOpen ? "is-open" : ""}`} aria-label="Primary navigation">
-          {navItems.map((item: NavItem) => (
+
+        <nav className="nav-links" id="navlinks">
+          {navItems.map((item, i) => (
             <a
               key={item.href}
-              className={activeSection === item.href.slice(1) ? "is-active" : ""}
+              className={`nav-link ${activeChapter === i ? "on" : ""}`}
               href={item.href}
               onClick={(e) => {
                 e.preventDefault();
-                jumpTo(item.href);
+                scrollToChapter(item.href.replace("#", ""));
               }}
             >
-              {item.label}
+              <span>{item.label}</span>
+              <span className="alt">{item.jp}</span>
             </a>
           ))}
-          <a
-            className="nav-cta"
-            href="#contact"
-            onClick={(e) => {
-              e.preventDefault();
-              jumpTo("#contact");
-            }}
-          >
-            Let’s connect <ArrowUpRight size={14} />
-          </a>
         </nav>
+
         <button
-          className="menu-toggle"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
+          className={`nav-burger ${menuOpen ? "active" : ""}`}
+          aria-label="Toggle Menu"
+          onClick={() => setMenuOpen(!menuOpen)}
         >
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          <i />
+          <i />
         </button>
       </header>
 
-      <div className="site-signal-rail" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
+      {/* Main Narrative Page Content */}
+      <main className="page" id="top">
+        {/* ============================================================ CHAPTER 01: INTRO */}
+        <section className="hero" id="intro" data-cam="0">
+          <div className="hero-top">
+            <div className="eyebrow">
+              <span className="dot" /> Chapter 01 — The Threshold
+            </div>
+            <h1 className="display h-hero">
+              <span className="mask-line">
+                <span>Where systems</span>
+              </span>
+              <span className="mask-line">
+                <span>reveal the</span>
+              </span>
+              <span className="mask-line">
+                <span>unseen.</span>
+              </span>
+            </h1>
+            <p className="hero-sub body">
+              Kartik Nilekani — Computer Science & Business Systems Engineer.
+              Engineering practical software, intelligent models, and thoughtful digital architecture.
+            </p>
+          </div>
 
-      <main id="top">
-        <section className="hero section-shell" aria-labelledby="hero-title">
-          <div className="hero__texture" aria-hidden="true" />
-          <div className="hero__grid-lines" aria-hidden="true" />
-          <div className="hero__copy">
-            <motion.div {...reveal(reduced, 0.05)} className="status-pill">
-              <span className="status-dot" /> Open to opportunities
-            </motion.div>
-            <motion.p {...reveal(reduced, 0.12)} className="eyebrow hero__eyebrow">
-              Computer science and business systems
-            </motion.p>
-            <motion.h1 {...reveal(reduced, 0.18)} id="hero-title">
-              Kartik Manjunath <em>Nilekani</em>
-            </motion.h1>
-            <motion.p {...reveal(reduced, 0.24)} className="hero__lead">
-              I build practical software, intelligent systems, and experiences that solve real problems.
-            </motion.p>
-            <motion.div {...reveal(reduced, 0.3)} className="hero__actions">
-              <Button className="button button--primary" onClick={() => jumpTo("#projects")}>
-                View projects <ArrowDownRight size={16} />
-              </Button>
-              <a className="button button--ghost" href="/resume/Kartik-Manjunath-Nilekani-Resume.pdf" download>
-                Download resume <ArrowUpRight size={16} />
+          <div className="hero-spacer" />
+
+          {/* Quick-links / Chapter Selector Chips */}
+          <div className="hero-foot">
+            <div className="hero-cue">
+              <span>Scroll to traverse chapters</span>
+              <span className="track">
+                <i />
+              </span>
+            </div>
+            <div className="chapters" id="chips">
+              {chapters.slice(0, 4).map((ch, idx) => (
+                <div
+                  key={ch.id}
+                  className={`chip ${activeChapter === idx ? "on" : ""}`}
+                  onClick={() => scrollToChapter(ch.id)}
+                >
+                  <span className="num">{ch.num}</span>
+                  <span className="tx">
+                    <b>{ch.title}</b>
+                    <p>{ch.desc}</p>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Floating Sanmon Peek Window */}
+          <a
+            className="peek"
+            href="#projects"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToChapter("projects");
+            }}
+            aria-label="Preview Selected Projects"
+          >
+            <span className="peek-fr" />
+            <span className="peek-play">
+              <svg viewBox="0 0 22 22" fill="none">
+                <path d="M8 5.6 16.4 11 8 16.4z" fill="#dfe7e0" />
+              </svg>
+            </span>
+            <span className="peek-cap">
+              <b className="jp">実績</b>
+              <i>Selected Works — BloodLink & VoxNav</i>
+            </span>
+          </a>
+
+          <div className="word-fb" aria-hidden="true">
+            KARTIK
+          </div>
+
+          <div className="hero-side">
+            <span className="v jp">工学と知性</span>
+          </div>
+        </section>
+
+        {/* ============================================================ CHAPTER 02: ABOUT */}
+        <section className="sec" id="about" data-cam="1">
+          <div className="sec-head">
+            <span className="k">
+              <b>02</b> — Foundations
+            </span>
+            <span className="rule" />
+            <span className="k jp">概要</span>
+          </div>
+
+          <div className="gate-grid">
+            <h2 className="display h-sec">
+              Signal over spectacle. Useful software built on clear problems.
+            </h2>
+            <div className="gate-copy">
+              <p className="lead">
+                I am a Computer Science & Business Systems scholar at Srinivas Institute of Technology,
+                passionate about bridging technical rigor with real-world utility. My focus spans full-stack
+                development, intelligent system architectures, graph algorithms, and accessible interaction design.
+              </p>
+              <p className="body">
+                Whether architecting real-time emergency healthcare networks like BloodLink, developing hands-free
+                speech command layers in VoxNav, or modeling topological pathfinding graphs in PathGrid, I build
+                with measured restraint: clean code contracts, robust database schemas, and intuitive interfaces.
+              </p>
+
+              <div className="focus-areas-block">
+                <h4>Current Research & Engineering Focus</h4>
+                <ul className="focus-list">
+                  {currentFocus.map((item) => (
+                    <li key={item}>
+                      <span className="focus-bullet" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <a
+                className="arrowlink"
+                href="#projects"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToChapter("projects");
+                }}
+              >
+                <span>Explore Selected Works</span>
+                <span className="ar">
+                  <svg viewBox="0 0 14 14" fill="none">
+                    <path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" strokeWidth="1.3" />
+                  </svg>
+                </span>
               </a>
-            </motion.div>
-            <motion.div {...reveal(reduced, 0.36)} className="hero__socials">
-              {socialLinks.map((link: SocialLink) => (
-                <a
-                  href={link.href}
-                  key={link.label}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${link.label} — ${link.note}`}
-                >
-                  <IconForLink label={link.label} />
-                  {link.label}
-                </a>
-              ))}
-            </motion.div>
-          </div>
-            <motion.div {...reveal(reduced, 0.22)} className="hero__diagram" aria-hidden="true">
-            <div ref={heroOrbitOneRef} className="hero__orbit hero__orbit--one parallax-layer" />
-            <div ref={heroOrbitTwoRef} className="hero__orbit hero__orbit--two parallax-layer" />
-            <div ref={heroSignalRef} className="hero__signal-card parallax-layer">
-              <span className="mono">K / 2026</span>
-              <strong>
-                Building useful
-                <br />
-                <span>systems.</span>
-              </strong>
-              <div className="hero__signal-line">
-                <i />
-                <i />
-                <i />
-                <i />
-              </div>
-              <small>full-stack / ai / data</small>
             </div>
-            <div className="hero__node hero__node--a" />
-            <div className="hero__node hero__node--b" />
-            <div className="hero__node hero__node--c" />
-          </motion.div>
-          <div className="hero__scroll mono">
-            <span>Scroll to inspect</span>
-            <ChevronDown size={14} />
           </div>
-        </section>
 
-        <section id="about" className="section-shell section-shell--light" aria-labelledby="about-title">
-          <div className="section-rail">
-            <SectionLabel index="01">About me</SectionLabel>
-            <p className="rail-note">
-              A student builder
-              <br />
-              with a systems lens.
-            </p>
-          </div>
-          <div className="about-layout">
-            <motion.div {...reveal(reduced)} className="about-copy">
-              <p className="eyebrow">The short version</p>
-              <h2 id="about-title">
-                Useful software starts with a <em>clear problem.</em>
-              </h2>
-              <p className="lede">
-                I’m Kartik, a Computer Science & Business Systems student at Srinivas Institute of Technology, learning by designing and shipping practical products.
-              </p>
-              <p>
-                I’m drawn to full-stack development, AI/ML, generative AI, data, and FinTech — especially where a thoughtful interface can make a complex system easier to use. Away from the screen, photography and videography help me keep an eye for framing, timing, and detail.
-              </p>
-              <div className="about-meta">
-                <span>
-                  <b>01</b> Srinivas Institute of Technology
-                </span>
-                <span>
-                  <b>02</b> 2023—2027 / Mangalore
-                </span>
-              </div>
-            </motion.div>
-            <motion.div {...reveal(reduced, 0.12)} className="portrait-placeholder">
-              <div className="portrait-placeholder__ring" />
-              <div className="portrait-placeholder__initials">KMN</div>
-              <div className="portrait-placeholder__caption"><span>Profile image</span><small>Kartik Manjunath Nilekani</small></div>
-            </motion.div>
-          </div>
-        </section>
-
-        <section id="education" className="section-shell section-shell--light" aria-labelledby="education-title">
-          <div className="section-rail">
-            <SectionLabel index="02">Education & signals</SectionLabel>
-            <p className="rail-note">
-              Foundations for
-              <br />
-              the next build.
-            </p>
-          </div>
-          <div className="education-content">
-            <motion.div {...reveal(reduced)} className="education-card">
-              <div>
-                <p className="eyebrow">Current foundation</p>
-                <h2 id="education-title">
-                  B.E. — Computer Science
-                  <br />& Business Systems
-                </h2>
-                <p>Srinivas Institute of Technology</p>
-              </div>
-              <div className="education-card__year mono">
-                2023—2027
-                <br />
-                <span>Mangalore, India</span>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        <section id="skills" className="section-shell section-shell--dark" aria-labelledby="skills-title">
-          <div className="section-rail">
-            <SectionLabel index="03">Technical arsenal</SectionLabel>
-            <p className="rail-note">
-              Tools chosen for
-              <br />
-              the work at hand.
-            </p>
-          </div>
-          <div className="skills-content">
-            <motion.div {...reveal(reduced)} className="section-heading">
-              <p className="eyebrow">Comfortable across the stack</p>
-              <h2 id="skills-title">
-                A toolkit that keeps
-                <br />
-                <em>moving with the problem.</em>
-              </h2>
-            </motion.div>
-            <div className="skill-grid">
-              {skillGroups.map((group: SkillGroup, i: number) => (
-                <motion.div key={group.label} {...reveal(reduced, i * 0.04)} className="skill-group">
-                  <div className="skill-group__top">
-                    <span className="mono">0{i + 1}</span>
-                    <h3>{group.label}</h3>
-                  </div>
-                  <div className="tag-row">
-                    {group.items.map((item: string) => (
-                      <span className="tag tag--dark" key={item}>
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </motion.div>
-              ))}
+          {/* Key Metrics Band */}
+          <div className="gate-stats">
+            <div>
+              <b>04+</b>
+              <span>Years of Code</span>
+            </div>
+            <div>
+              <b>03+</b>
+              <span>Core Systems</span>
+            </div>
+            <div>
+              <b>CS&BS</b>
+              <span>SIT Scholar</span>
+            </div>
+            <div>
+              <b>∞</b>
+              <span>Curiosity</span>
             </div>
           </div>
         </section>
 
-        <section id="projects" className="section-shell section-shell--light projects-section" aria-labelledby="projects-title">
-          <div className="section-rail">
-            <SectionLabel index="04">Selected projects</SectionLabel>
-            <p className="rail-note">
-              From emergency response
-              <br />
-              to voice interfaces.
+        {/* ============================================================ CHAPTER 03: PROJECTS */}
+        <section className="sec" id="projects" data-cam="2">
+          <div className="sec-head">
+            <span className="k">
+              <b>03</b> — Selected Works
+            </span>
+            <span className="rule" />
+            <span className="k jp">実績</span>
+          </div>
+
+          <div className="cur-head">
+            <h2 className="display h-sec">Engineered platforms with measurable impact.</h2>
+            <p className="body-lg">
+              Each project represents an end-to-end engineered solution to a concrete problem,
+              combining algorithmic efficiency, modular APIs, and intuitive user experiences.
             </p>
           </div>
-          <div className="projects-content">
-            <motion.div {...reveal(reduced)} className="section-heading section-heading--split">
-              <div>
-                <p className="eyebrow">Work in progress, made visible</p>
-                <h2 id="projects-title">
-                  Projects with a <em>reason to exist.</em>
-                </h2>
-              </div>
-              <p className="heading-note">
-                Three explorations across full-stack systems, speech interaction, and wayfinding.
-              </p>
-            </motion.div>
-            <div className="project-list">
-              {projects.map((project: Project) => (
-                <ProjectCard key={project.id} project={project} onOpen={setSelectedProject} reduced={reduced} />
-              ))}
-            </div>
-            <motion.div {...reveal(reduced)} className="architecture-wrap">
-              <div>
-                <p className="eyebrow">Inside the featured system</p>
-                <h3>Architecture that stays legible.</h3>
-                <p>
-                  BloodLink keeps the user journey simple while connecting the layers needed for secure, real-time coordination.
-                </p>
-              </div>
-              <Architecture />
-            </motion.div>
-          </div>
+
+          {/* Project Showcase with Scissor Viewports and Case Studies */}
+          <ProjectShowcase />
         </section>
 
-        <section id="experience" className="section-shell section-shell--dark" aria-labelledby="experience-title">
-          <div className="section-rail">
-            <SectionLabel index="05">Experience</SectionLabel>
-            <p className="rail-note">
-              Learning in public,
-              <br />
-              building with intent.
+        {/* ============================================================ CHAPTER 04: SKILLS */}
+        <section className="sec" id="skills" data-cam="3">
+          <div className="sec-head">
+            <span className="k">
+              <b>04</b> — Sacred Craft
+            </span>
+            <span className="rule" />
+            <span className="k jp">技術</span>
+          </div>
+
+          <div className="cur-head">
+            <h2 className="display h-sec">A disciplined technical arsenal.</h2>
+            <p className="body-lg">
+              Explore my verified stack across programming languages, full-stack frameworks,
+              AI toolchains, database engines, and core software engineering disciplines.
             </p>
           </div>
-          <div className="timeline-content">
-            <motion.div {...reveal(reduced)} className="section-heading">
-              <p className="eyebrow">A workbench, not a highlight reel</p>
-              <h2 id="experience-title">
-                The work behind
-                <br />
-                <em>the work.</em>
-              </h2>
-            </motion.div>
-            <div className="timeline">
-              {verifiedTimeline.map((item: TimelineItem, index: number) => (
-                <motion.article
-                  key={`${item.title}-${item.date}`}
-                  {...reveal(reduced, index * 0.1)}
-                  className="timeline-item"
-                >
-                  <div className="timeline-item__date mono">{item.date}</div>
-                  <div className="timeline-item__marker">
-                    <span />
-                  </div>
-                  <div className="timeline-item__body">
-                    <p className="eyebrow">{item.org}</p>
-                    <h3>{item.title}</h3>
-                    <p>{item.description}</p>
-                  </div>
-                </motion.article>
-              ))}
-            </div>
-          </div>
+
+          {/* Interactive Pro Skills Catalog Component */}
+          <SkillsGallery />
         </section>
 
-        <section id="certifications" className="section-shell section-shell--light" aria-labelledby="certifications-title">
-          <div className="section-rail">
-            <SectionLabel index="06">Certifications</SectionLabel>
-            <p className="rail-note">
-              Proof of active
-              <br />
-              learning.
-            </p>
+        {/* ============================================================ CHAPTER 05: EXPERIENCE & CERTIFICATIONS */}
+        <section className="sec" id="experience" data-cam="4">
+          <div className="sec-head">
+            <span className="k">
+              <b>05</b> — Timeline & Credentials
+            </span>
+            <span className="rule" />
+            <span className="k jp">経歴</span>
           </div>
-          <div className="cert-layout">
-            <motion.div {...reveal(reduced)}>
-              <p className="eyebrow">Selected credentials</p>
-              <h3 id="certifications-title">Signals of continued learning.</h3>
-            </motion.div>
-            <div className="cert-card-grid">
-              {certifications.map((cert: Certification, index: number) => (
-                <motion.article
-                  key={cert.name}
-                  {...reveal(reduced, index * 0.05)}
-                  className="cert-card"
-                >
-                  <div className="cert-card__header">
-                    {cert.category && <span className="cert-card__category">{cert.category}</span>}
-                    <span className="cert-card__year mono">{cert.year}</span>
+
+          <div className="timeline-cert-grid">
+            {/* Timeline Column */}
+            <div className="timeline-column">
+              <h3 className="section-subtitle">
+                <Compass size={16} />
+                <span>Verified Milestones & Roles</span>
+              </h3>
+              <div className="timeline-list">
+                {verifiedTimeline.map((item, i) => (
+                  <div key={i} className="timeline-card">
+                    <div className="timeline-card__top">
+                      <span className="timeline-date">{item.date}</span>
+                      {item.badge && <span className="timeline-badge">{item.badge}</span>}
+                    </div>
+                    <h4 className="timeline-title">{item.title}</h4>
+                    <p className="timeline-org">{item.org}</p>
+                    <p className="timeline-desc">{item.description}</p>
                   </div>
-                  <div className="cert-card__body">
-                    <h4>{cert.name}</h4>
-                    <p>{cert.issuer}</p>
-                    <small>{cert.detail}</small>
-                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Certifications Column */}
+            <div className="cert-column">
+              <h3 className="section-subtitle">
+                <Award size={16} />
+                <span>Formal Certifications & Credentials</span>
+              </h3>
+              <div className="cert-list">
+                {certifications.map((cert, i) => (
                   <a
-                    className="cert-card__action"
+                    key={i}
                     href={cert.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`View certificate for ${cert.name}`}
+                    className="cert-card"
                   >
-                    View Certificate
-                    <ArrowUpRight size={14} />
-                  </a>
-                </motion.article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section-shell section-shell--warm" aria-labelledby="focus-title">
-          <div className="section-rail">
-            <SectionLabel index="06">Current focus</SectionLabel>
-            <p className="rail-note">
-              A roadmap with
-              <br />
-              room to change.
-            </p>
-          </div>
-          <div className="focus-content">
-            <motion.div {...reveal(reduced)} className="section-heading">
-              <p className="eyebrow">Currently building & learning</p>
-              <h2 id="focus-title">
-                Curious enough
-                <br />
-                to keep <em>going.</em>
-              </h2>
-            </motion.div>
-            <div className="focus-list">
-              {currentFocus.map((item: string, index: number) => (
-                <motion.div key={`${index}-${item}`} {...reveal(reduced, index * 0.04)} className="focus-item">
-                  <span className="mono">0{index + 1}</span>
-                  <span>{item}</span>
-                  <ArrowUpRight size={16} />
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="contact" className="section-shell section-shell--contact" aria-labelledby="contact-title">
-          <div className="contact-glow" aria-hidden="true" />
-          <div className="contact-content">
-            <motion.div {...reveal(reduced)}>
-              <SectionLabel index="07">Contact</SectionLabel>
-              <h2 id="contact-title">
-                Let’s build something <em>useful.</em>
-              </h2>
-              <p>Have an opportunity, project, or idea? I’d be happy to connect.</p>
-              <div className="contact-links">
-                {socialLinks.map((link: SocialLink) => (
-                  <a href={link.href} key={link.label} target="_blank" rel="noopener noreferrer">
-                    <IconForLink label={link.label} />
-                    {link.label}
-                    <ArrowUpRight size={14} />
+                    <div className="cert-card__header">
+                      <span className="cert-cat">{cert.category}</span>
+                      <span className="cert-year">{cert.year}</span>
+                    </div>
+                    <h4 className="cert-title">{cert.name}</h4>
+                    <p className="cert-issuer">{cert.issuer}</p>
+                    <p className="cert-detail">{cert.detail}</p>
+                    <div className="cert-card__footer">
+                      <span className="cert-view-text">View Certificate PDF</span>
+                      <ArrowUpRight size={14} className="cert-arrow" />
+                    </div>
                   </a>
                 ))}
               </div>
-            </motion.div>
-            <motion.form
-              {...reveal(reduced, 0.12)}
-              className="contact-form"
-              suppressHydrationWarning
-              onSubmit={(e) => {
-                e.preventDefault();
-                setSent(true);
-              }}
-              noValidate
-            >
-              {sent ? (
-                <div className="form-success">
-                  <div className="form-success__icon">
-                    <Check />
-                  </div>
-                  <h3>Message interface ready.</h3>
-                  <p>
-                    Thank you for reaching out! In this environment, your message validation is complete.
-                  </p>
-                  <button type="button" className="text-button" onClick={() => setSent(false)}>
-                    Send another <ArrowUpRight size={14} />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <label htmlFor="name">
-                    Name
-                    <input id="name" name="name" placeholder="Your name" required minLength={2} suppressHydrationWarning />
-                  </label>
-                  <label htmlFor="email">
-                    Email
-                    <input id="email" name="email" type="email" placeholder="you@example.com" required suppressHydrationWarning />
-                  </label>
-                  <label htmlFor="message">
-                    Message
-                    <textarea
-                      id="message"
-                      name="message"
-                      rows={4}
-                      placeholder="Tell me about the opportunity or idea..."
-                      required
-                      minLength={10}
-                    />
-                  </label>
-                  <button className="button button--primary form-submit" type="submit" suppressHydrationWarning>
-                    Send message <Send size={15} />
-                  </button>
-                  <p className="form-note">
-                    <Radio size={13} /> Client-side validation enabled
-                  </p>
-                </>
-              )}
-            </motion.form>
+            </div>
           </div>
         </section>
+
+        {/* ============================================================ CHAPTER 06: CONTACT */}
+        <section className="sec fin" id="contact" data-cam="5">
+          <div className="eyebrow">Chapter 06 — Afterlight</div>
+          <h2 className="display">Let&rsquo;s Build Something Resilient.</h2>
+          <p className="body-lg">
+            Whether you have an interesting software engineering opportunity, an open-source collaboration,
+            or an intelligent systems project, my inbox is always open.
+          </p>
+
+          {/* Direct Social Links */}
+          <div className="contact-links-row">
+            {socialLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-pill-btn"
+              >
+                {link.label === "GitHub" && <Github size={15} />}
+                {link.label === "LinkedIn" && <Linkedin size={15} />}
+                {link.label === "Email" && <Mail size={15} />}
+                <span>{link.label}</span>
+                <ArrowUpRight size={13} />
+              </a>
+            ))}
+            <a
+              href="/resume/Kartik-Manjunath-Nilekani-Resume.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-pill-btn social-pill-btn--highlight"
+            >
+              <FileText size={15} />
+              <span>Resume PDF</span>
+              <ArrowUpRight size={13} />
+            </a>
+          </div>
+
+          {/* Interactive Contact Form */}
+          <div className="contact-form-container">
+            <form onSubmit={handleContactSubmit} className="cinematic-contact-form">
+              <div className="form-row-2">
+                <div className="form-field">
+                  <label htmlFor="contact-name">Your Name</label>
+                  <input
+                    id="contact-name"
+                    type="text"
+                    required
+                    placeholder="Jane Doe"
+                    value={formState.name}
+                    onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                  />
+                </div>
+                <div className="form-field">
+                  <label htmlFor="contact-email">Your Email</label>
+                  <input
+                    id="contact-email"
+                    type="email"
+                    required
+                    placeholder="jane@example.com"
+                    value={formState.email}
+                    onChange={(e) => setFormState({ ...formState, email: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="contact-message">Message</label>
+                <textarea
+                  id="contact-message"
+                  required
+                  rows={4}
+                  placeholder="Tell me about your project, idea, or role..."
+                  value={formState.message}
+                  onChange={(e) => setFormState({ ...formState, message: e.target.value })}
+                />
+              </div>
+
+              <div className="form-footer">
+                <button
+                  type="submit"
+                  disabled={formState.status === "submitting"}
+                  className="cta-submit-btn"
+                >
+                  <Send size={15} />
+                  <span>
+                    {formState.status === "submitting" ? "Transmitting..." : "Send Dispatch"}
+                  </span>
+                </button>
+
+                {formState.status === "success" && (
+                  <p className="form-status-msg is-success">
+                    <Check size={14} /> Message received. I will reply shortly.
+                  </p>
+                )}
+                {formState.status === "error" && (
+                  <p className="form-status-msg is-error">
+                    {formState.errorMsg}
+                  </p>
+                )}
+              </div>
+            </form>
+          </div>
+
+          <a
+            className="cta"
+            href="#intro"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToChapter("intro");
+            }}
+          >
+            <i />
+            <span>Return to Threshold</span>
+            <svg viewBox="0 0 14 14" fill="none" width="13" height="13">
+              <path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" strokeWidth="1.3" />
+            </svg>
+          </a>
+        </section>
+
+        {/* ============================================================ FOOTER */}
+        <footer className="foot" data-cam="6">
+          <div className="foot-grid">
+            <div className="foot-brand">
+              <svg viewBox="0 0 44 44" fill="none" width="34" height="34" aria-hidden="true">
+                <circle cx="22" cy="25" r="8.6" fill="#e0231c" fillOpacity=".9" />
+                <path d="M5 13h34M9 18.4h26M22 8.5v27" stroke="#dfe7e0" strokeWidth="1.5" />
+              </svg>
+              <p>
+                A cinematic interactive Three.js portfolio for Kartik Nilekani.
+                Computer Science & Business Systems Engineer.
+              </p>
+            </div>
+            <div>
+              <h4>Chapters</h4>
+              <ul>
+                {chapters.map((ch) => (
+                  <li key={ch.id}>
+                    <a
+                      href={`#${ch.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToChapter(ch.id);
+                      }}
+                    >
+                      {ch.num} — {ch.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4>Key Projects</h4>
+              <ul>
+                <li>
+                  <a
+                    href="#projects"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scrollToChapter("projects");
+                    }}
+                  >
+                    BloodLink
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#projects"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scrollToChapter("projects");
+                    }}
+                  >
+                    VoxNav Interface
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#projects"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scrollToChapter("projects");
+                    }}
+                  >
+                    PathGrid Map
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4>Networks</h4>
+              <ul>
+                <li>
+                  <a href="https://github.com/Kartik01032005" target="_blank" rel="noopener noreferrer">
+                    GitHub
+                  </a>
+                </li>
+                <li>
+                  <a href="https://www.linkedin.com/in/kartik-nilekani-287a6329b/" target="_blank" rel="noopener noreferrer">
+                    LinkedIn
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:kartiknilekani568@gmail.com">
+                    Direct Email
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="foot-base">
+            <span>© 2026 Kartik Nilekani — All rights reserved</span>
+            <span className="jp">工学と知性・静寂と構造</span>
+            <span>Next.js · Three.js WebGL · Framer Motion</span>
+          </div>
+        </footer>
       </main>
 
-      <footer className="site-footer">
-        <span>© 2026 Kartik Manjunath Nilekani</span>
-        <span className="footer-center">Built with intent, not noise.</span>
-        <a
-          href="#top"
-          onClick={(e) => {
-            e.preventDefault();
-            jumpTo("#top");
-          }}
-        >
-          Back to top <ArrowUpRight size={14} />
-        </a>
-      </footer>
-
-      {selectedProject && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setSelectedProject(null)}>
-          <motion.div
-            {...(reduced
-              ? {}
-              : {
-                  initial: { opacity: 0, y: 20, scale: 0.98 },
-                  animate: { opacity: 1, y: 0, scale: 1 },
-                  transition: { duration: 0.35 },
-                })}
-            className="case-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="case-title"
-            onClick={(e) => e.stopPropagation()}
+      {/* Chapter Progress Rail */}
+      <div className="rail" id="rail">
+        {chapters.map((ch, idx) => (
+          <button
+            key={ch.id}
+            className={activeChapter === idx ? "on" : ""}
+            title={`${ch.num} — ${ch.title}`}
+            aria-label={`Chapter ${ch.num}: ${ch.title}`}
+            onClick={() => scrollToChapter(ch.id)}
           >
-            <button
-              className="modal-close"
-              aria-label="Close case study"
-              onClick={() => setSelectedProject(null)}
-            >
-              <X size={19} />
-            </button>
-            <div className="case-modal__top">
-              <span className="eyebrow">Case study / {selectedProject.index}</span>
-              <h2 id="case-title">{selectedProject.name}</h2>
-              <p>{selectedProject.description}</p>
-            </div>
-            <div className="case-modal__grid">
-              <div>
-                <span className="detail-label">Problem</span>
-                <p>{selectedProject.problem}</p>
-              </div>
-              <div>
-                <span className="detail-label">Solution</span>
-                <p>{selectedProject.solution}</p>
-              </div>
-            </div>
-            <div className="case-modal__features">
-              <span className="detail-label">Key features</span>
-              <div className="feature-list">
-                {selectedProject.features.map((feature: string) => (
-                  <span key={feature}>
-                    <Check size={14} />
-                    {feature}
-                  </span>
-                ))}
-              </div>
-            </div>
-            {selectedProject.id === "bloodlink" && <Architecture />}
-            <div className="tag-row">
-              {selectedProject.stack.map((item: string) => (
-                <span className="tag" key={item}>
-                  {item}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      )}
+            <i />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
