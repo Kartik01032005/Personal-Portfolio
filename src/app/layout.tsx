@@ -59,7 +59,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${spaceGrotesk.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}
     >
-      <body>
+      <body suppressHydrationWarning>
         <ErrorBoundary>
           <ThemeProvider defaultTheme="light">
             <TooltipProvider>

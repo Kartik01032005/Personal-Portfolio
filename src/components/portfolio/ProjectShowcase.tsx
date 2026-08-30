@@ -18,6 +18,7 @@ export function ProjectShowcase() {
             onClick={() => setSelectedProject(project)}
             tabIndex={0}
             role="button"
+            suppressHydrationWarning
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();

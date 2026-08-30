@@ -42,7 +42,7 @@ export function SkillsGallery() {
     <div className="skills-gallery" id="skills-catalog">
       {/* Top Search & Filter Bar */}
       <div className="skills-gallery__controls">
-        <div className="skills-gallery__search">
+        <div className="skills-gallery__search" suppressHydrationWarning>
           <Search className="search-icon" size={16} />
           <input
             type="text"
@@ -51,12 +51,14 @@ export function SkillsGallery() {
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Search skills"
             className="skills-search-input"
+            suppressHydrationWarning
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
               className="clear-search-btn"
               aria-label="Clear search"
+              suppressHydrationWarning
             >
               <X size={14} />
             </button>
@@ -64,7 +66,7 @@ export function SkillsGallery() {
         </div>
 
         {/* Category Pills */}
-        <div className="skills-gallery__pills" role="tablist">
+        <div className="skills-gallery__pills" role="tablist" suppressHydrationWarning>
           {categories.map((cat) => {
             const Icon = cat.icon;
             const isActive = activeCategory === cat.id;
@@ -75,6 +77,7 @@ export function SkillsGallery() {
                 aria-selected={isActive}
                 onClick={() => setActiveCategory(cat.id)}
                 className={`skill-pill ${isActive ? "is-active" : ""}`}
+                suppressHydrationWarning
               >
                 <Icon size={13} className="pill-icon" />
                 <span>{cat.label}</span>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState, useRef, useCallback } from "react";
+import Lenis from "lenis";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -34,8 +34,8 @@ import { ProjectShowcase } from "@/components/portfolio/ProjectShowcase";
 import { SkillsGallery } from "@/components/portfolio/SkillsGallery";
 
 export default function Home() {
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [activeChapter, setActiveChapter] = useState(0);
+  const [isStuck, setIsStuck] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [preloaderDone, setPreloaderDone] = useState(false);
   const [preloaderProgress, setPreloaderProgress] = useState(15);
@@ -52,27 +52,87 @@ export default function Home() {
     status: "idle",
   });
 
-  // Calculate scroll position across chapters
+  const lenisRef = useRef<Lenis | null>(null);
+  const activeChapterRef = useRef<number>(0);
+
+  // Initialize Lenis smooth scroll — Lenis only provides inertia.
+  // Three.js reads scrollY directly in its own RAF, so we do NOT dispatch events here.
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (docHeight <= 0) return;
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: "vertical",
+      gestureOrientation: "vertical",
+      smoothWheel: true,
+      syncTouch: false,
+      touchMultiplier: 2,
+    });
+    lenisRef.current = lenis;
 
-      const progress = (scrollY / docHeight) * (chapters.length - 1);
-      setScrollProgress(progress);
+    // Lenis needs its own standalone RAF to smooth the scroll position
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    const rafId = requestAnimationFrame(raf);
 
-      const currentChapterIdx = Math.min(
-        Math.max(0, Math.round(progress)),
-        chapters.length - 1
-      );
-      setActiveChapter(currentChapterIdx);
+    // UI-only scroll state: sticky header + active chapter (no React render thrashing)
+    let anchors: number[] = [];
+    const measure = () => {
+      const ids = ["intro", "about", "projects", "skills", "experience", "contact"];
+      const secs = ids.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+      const vpH = window.innerHeight;
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - vpH);
+      if (secs.length === 6) {
+        anchors = secs.map((el, i) => {
+          if (i === 0) return 0;
+          if (i === secs.length - 1) return maxScroll;
+          return Math.min(Math.max(el.offsetTop + el.offsetHeight * 0.5 - vpH * 0.5, 0), maxScroll);
+        });
+        for (let ai = 1; ai < anchors.length; ai++) {
+          anchors[ai] = Math.max(anchors[ai], anchors[ai - 1] + 1);
+        }
+      }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    measure();
+    window.addEventListener("resize", measure, { passive: true });
+
+    function progressFor(y: number) {
+      if (anchors.length < 2 || y <= anchors[0]) return 0;
+      for (let i = 0; i < anchors.length - 1; i++) {
+        if (y <= anchors[i + 1]) {
+          return i + (y - anchors[i]) / (anchors[i + 1] - anchors[i]);
+        }
+      }
+      return anchors.length - 1;
+    }
+
+    // Use lenis scroll event for UI state only (fires after Lenis processes each frame)
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+
+      // Stuck header — only set state on threshold cross
+      const shouldBeStuck = scrollY > 40;
+      setIsStuck((prev) => (prev !== shouldBeStuck ? shouldBeStuck : prev));
+
+      // Active chapter — only set state when chapter boundary actually changes
+      const progress = progressFor(scrollY);
+      const currentChapterIdx = Math.min(Math.max(0, Math.round(progress)), 5);
+      if (currentChapterIdx !== activeChapterRef.current) {
+        activeChapterRef.current = currentChapterIdx;
+        setActiveChapter(currentChapterIdx);
+      }
+    };
+
+    lenis.on("scroll", handleScroll);
     handleScroll();
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
   // Preloader progress animation
@@ -81,23 +141,27 @@ export default function Home() {
       setPreloaderProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          setTimeout(() => setPreloaderDone(true), 400);
+          setTimeout(() => setPreloaderDone(true), 300);
           return 100;
         }
-        return prev + Math.floor(Math.random() * 18 + 12);
+        return prev + 25;
       });
-    }, 120);
+    }, 100);
 
     return () => clearInterval(interval);
   }, []);
 
-  const scrollToChapter = (chapterId: string) => {
+  const scrollToChapter = useCallback((chapterId: string) => {
     const el = document.getElementById(chapterId);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
+      if (lenisRef.current) {
+        lenisRef.current.scrollTo(el, { duration: 1.4 });
+      } else {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
       setMenuOpen(false);
     }
-  };
+  }, []);
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,40 +206,40 @@ export default function Home() {
   return (
     <div className="portfolio-experience">
       {/* Three.js Procedural Sanctuary Canvas */}
-      <CinematicSanctuary
-        scrollProgress={scrollProgress}
-        activeChapter={activeChapter}
-        onLoaded={() => setPreloaderProgress(100)}
-      />
+      <CinematicSanctuary onLoaded={() => setPreloaderProgress(100)} />
 
       {/* Atmospheric Overlays */}
       <div id="vignette" aria-hidden="true" />
       <div id="grain" aria-hidden="true" />
 
       {/* Preloader */}
-      <div id="pre" className={preloaderDone ? "done" : ""}>
-        <div className="pre-in">
+      <div id="pre" className={preloaderDone ? "done" : ""} suppressHydrationWarning>
+        <div className="pre-in" suppressHydrationWarning>
           <div className="pre-mark">
             <svg viewBox="0 0 44 44" fill="none" aria-hidden="true">
-              <circle cx="22" cy="24" r="9.5" stroke="#e0231c" stroke-width="1.2" />
-              <path d="M6 12h32M9.5 17h25M22 8v28" stroke="#dfe7e0" stroke-width="1.2" />
+              <circle cx="22" cy="24" r="9.5" stroke="#e0231c" strokeWidth="1.2" />
+              <path d="M6 12h32M9.5 17h25M22 8v28" stroke="#dfe7e0" strokeWidth="1.2" />
             </svg>
           </div>
           <div className="pre-jp jp">神域の静寂</div>
-          <div className="pre-bar">
-            <i id="pre-fill" style={{ right: `${100 - preloaderProgress}%` }} />
+          <div className="pre-bar" suppressHydrationWarning>
+            <i id="pre-fill" style={{ right: `${100 - preloaderProgress}%` }} suppressHydrationWarning />
           </div>
-          <div className="pre-meta">
+          <div className="pre-meta" suppressHydrationWarning>
             <span>Raising the 3D Sanctuary</span>
             <b>
-              <span>{Math.min(100, preloaderProgress)}</span>%
+              <span suppressHydrationWarning>{Math.min(100, preloaderProgress)}</span>%
             </b>
           </div>
         </div>
       </div>
 
       {/* Primary Navigation Bar */}
-      <header className={`nav ${scrollProgress > 0.1 ? "stuck" : ""} ${menuOpen ? "menu-open" : ""}`} id="nav">
+      <header
+        className={`nav ${isStuck ? "stuck" : ""} ${menuOpen ? "menu-open" : ""}`}
+        id="nav"
+        suppressHydrationWarning
+      >
         <a
           className="brand"
           href="#intro"
@@ -195,7 +259,7 @@ export default function Home() {
           </span>
         </a>
 
-        <nav className="nav-links" id="navlinks">
+        <nav className="nav-links" id="navlinks" suppressHydrationWarning>
           {navItems.map((item, i) => (
             <a
               key={item.href}
@@ -216,6 +280,7 @@ export default function Home() {
           className={`nav-burger ${menuOpen ? "active" : ""}`}
           aria-label="Toggle Menu"
           onClick={() => setMenuOpen(!menuOpen)}
+          suppressHydrationWarning
         >
           <i />
           <i />
@@ -257,15 +322,18 @@ export default function Home() {
                 <i />
               </span>
             </div>
-            <div className="chapters" id="chips">
+            <div className="chapters" id="chips" suppressHydrationWarning>
               {chapters.slice(0, 4).map((ch, idx) => (
                 <div
                   key={ch.id}
                   className={`chip ${activeChapter === idx ? "on" : ""}`}
                   onClick={() => scrollToChapter(ch.id)}
+                  suppressHydrationWarning
                 >
-                  <span className="num">{ch.num}</span>
-                  <span className="tx">
+                  <span className="num" suppressHydrationWarning>
+                    {ch.num}
+                  </span>
+                  <span className="tx" suppressHydrationWarning>
                     <b>{ch.title}</b>
                     <p>{ch.desc}</p>
                   </span>
@@ -530,10 +598,10 @@ export default function Home() {
           </div>
 
           {/* Interactive Contact Form */}
-          <div className="contact-form-container">
-            <form onSubmit={handleContactSubmit} className="cinematic-contact-form">
-              <div className="form-row-2">
-                <div className="form-field">
+          <div className="contact-form-container" suppressHydrationWarning>
+            <form onSubmit={handleContactSubmit} className="cinematic-contact-form" suppressHydrationWarning>
+              <div className="form-row-2" suppressHydrationWarning>
+                <div className="form-field" suppressHydrationWarning>
                   <label htmlFor="contact-name">Your Name</label>
                   <input
                     id="contact-name"
@@ -542,9 +610,10 @@ export default function Home() {
                     placeholder="Jane Doe"
                     value={formState.name}
                     onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                    suppressHydrationWarning
                   />
                 </div>
-                <div className="form-field">
+                <div className="form-field" suppressHydrationWarning>
                   <label htmlFor="contact-email">Your Email</label>
                   <input
                     id="contact-email"
@@ -553,11 +622,12 @@ export default function Home() {
                     placeholder="jane@example.com"
                     value={formState.email}
                     onChange={(e) => setFormState({ ...formState, email: e.target.value })}
+                    suppressHydrationWarning
                   />
                 </div>
               </div>
 
-              <div className="form-field">
+              <div className="form-field" suppressHydrationWarning>
                 <label htmlFor="contact-message">Message</label>
                 <textarea
                   id="contact-message"
@@ -566,14 +636,16 @@ export default function Home() {
                   placeholder="Tell me about your project, idea, or role..."
                   value={formState.message}
                   onChange={(e) => setFormState({ ...formState, message: e.target.value })}
+                  suppressHydrationWarning
                 />
               </div>
 
-              <div className="form-footer">
+              <div className="form-footer" suppressHydrationWarning>
                 <button
                   type="submit"
                   disabled={formState.status === "submitting"}
                   className="cta-submit-btn"
+                  suppressHydrationWarning
                 >
                   <Send size={15} />
                   <span>
@@ -582,12 +654,12 @@ export default function Home() {
                 </button>
 
                 {formState.status === "success" && (
-                  <p className="form-status-msg is-success">
+                  <p className="form-status-msg is-success" suppressHydrationWarning>
                     <Check size={14} /> Message received. I will reply shortly.
                   </p>
                 )}
                 {formState.status === "error" && (
-                  <p className="form-status-msg is-error">
+                  <p className="form-status-msg is-error" suppressHydrationWarning>
                     {formState.errorMsg}
                   </p>
                 )}
@@ -711,7 +783,7 @@ export default function Home() {
       </main>
 
       {/* Chapter Progress Rail */}
-      <div className="rail" id="rail">
+      <div className="rail" id="rail" suppressHydrationWarning>
         {chapters.map((ch, idx) => (
           <button
             key={ch.id}
@@ -719,8 +791,9 @@ export default function Home() {
             title={`${ch.num} — ${ch.title}`}
             aria-label={`Chapter ${ch.num}: ${ch.title}`}
             onClick={() => scrollToChapter(ch.id)}
+            suppressHydrationWarning
           >
-            <i />
+            <i suppressHydrationWarning />
           </button>
         ))}
       </div>

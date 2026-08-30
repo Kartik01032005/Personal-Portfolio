@@ -4,30 +4,20 @@ import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 interface CinematicSanctuaryProps {
-  scrollProgress: number; // 0 to 5
-  activeChapter: number;
   onLoaded?: () => void;
 }
 
-export function CinematicSanctuary({
-  scrollProgress,
-  activeChapter,
-  onLoaded,
-}: CinematicSanctuaryProps) {
+export function CinematicSanctuary({ onLoaded }: CinematicSanctuaryProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [hasWebGL, setHasWebGL] = useState(true);
-  const [loadProgress, setLoadProgress] = useState(0);
-  const [isReady, setIsReady] = useState(false);
 
-  // References to keep across re-renders
+  // References to keep across re-renders without triggering React updates
   const stateRef = useRef<{
     renderer: THREE.WebGLRenderer | null;
     scene: THREE.Scene | null;
     camera: THREE.PerspectiveCamera | null;
-    post: any;
     world: Record<string, any>;
-    word: Record<string, any>;
     rig: {
       prog: number;
       smooth: number;
@@ -35,37 +25,18 @@ export function CinematicSanctuary({
       my: number;
       tmx: number;
       tmy: number;
-      intro: number;
-      focus: number;
-      focusAmt: number;
     };
     curveP: THREE.CatmullRomCurve3 | null;
     curveT: THREE.CatmullRomCurve3 | null;
-    tmpCam: THREE.PerspectiveCamera | null;
     clock: number;
     tPrev: number;
     running: boolean;
     rafId: number;
-    perf: { scale: number; acc: number; n: number; locked: boolean };
-    wisp: {
-      mesh: THREE.Points | null;
-      list: any[];
-      i: number;
-      acc: number;
-      ex: number;
-      ey: number;
-      lx: number;
-      ly: number;
-      idle: number;
-      seen: boolean;
-    };
   }>({
     renderer: null,
     scene: null,
     camera: null,
-    post: { levels: [] },
     world: {},
-    word: { glyphs: [], group: null, ink: null, reveal: 0, rise: 0 },
     rig: {
       prog: 0,
       smooth: 0,
@@ -73,41 +44,14 @@ export function CinematicSanctuary({
       my: 0,
       tmx: 0,
       tmy: 0,
-      intro: 0,
-      focus: -1,
-      focusAmt: 0,
     },
     curveP: null,
     curveT: null,
-    tmpCam: null,
     clock: 0,
     tPrev: 0,
     running: false,
     rafId: 0,
-    perf: { scale: 1, acc: 0, n: 0, locked: false },
-    wisp: {
-      mesh: null,
-      list: [],
-      i: 0,
-      acc: 0,
-      ex: 0,
-      ey: 0,
-      lx: 0,
-      ly: 0,
-      idle: 0,
-      seen: false,
-    },
   });
-
-  // Sync scroll progress into stateRef
-  useEffect(() => {
-    stateRef.current.rig.prog = scrollProgress;
-  }, [scrollProgress]);
-
-  // Sync active chapter focus into stateRef
-  useEffect(() => {
-    stateRef.current.rig.focus = activeChapter;
-  }, [activeChapter]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -124,7 +68,6 @@ export function CinematicSanctuary({
       const t = sat((x - e0) / (e1 - e0));
       return t * t * (3 - 2 * t);
     };
-    const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
     const TAU = Math.PI * 2;
     const damp = (cur: number, to: number, rate: number, dt: number) =>
       lerp(cur, to, 1 - Math.exp(-rate * dt));
@@ -152,33 +95,20 @@ export function CinematicSanctuary({
       }
       for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
       const G = [
-        [1, 1],
-        [-1, 1],
-        [1, -1],
-        [-1, -1],
-        [1, 0],
-        [-1, 0],
-        [0, 1],
-        [0, -1],
+        [1, 1], [-1, 1], [1, -1], [-1, -1],
+        [1, 0], [-1, 0], [0, 1], [0, -1],
       ];
       const fade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
       return function (x: number, y: number) {
-        const xi = Math.floor(x),
-          yi = Math.floor(y);
-        const X = xi & 255,
-          Y = yi & 255,
-          xf = x - xi,
-          yf = y - yi;
-        const u = fade(xf),
-          v = fade(yf);
+        const xi = Math.floor(x), yi = Math.floor(y);
+        const X = xi & 255, Y = yi & 255, xf = x - xi, yf = y - yi;
+        const u = fade(xf), v = fade(yf);
         const g = (h: number, dx: number, dy: number) => {
           const q = G[h & 7];
           return q[0] * dx + q[1] * dy;
         };
-        const aa = perm[perm[X] + Y],
-          ab = perm[perm[X] + Y + 1];
-        const ba = perm[perm[X + 1] + Y],
-          bb = perm[perm[X + 1] + Y + 1];
+        const aa = perm[perm[X] + Y], ab = perm[perm[X] + Y + 1];
+        const ba = perm[perm[X + 1] + Y], bb = perm[perm[X + 1] + Y + 1];
         return lerp(
           lerp(g(aa, xf, yf), g(ba, xf - 1, yf), u),
           lerp(g(ab, xf, yf - 1), g(bb, xf - 1, yf - 1), u),
@@ -188,10 +118,7 @@ export function CinematicSanctuary({
     }
 
     function fbm(n: any, x: number, y: number, oct: number, lac: number, gain: number) {
-      let a = 0.5,
-        f = 1,
-        s = 0,
-        m = 0;
+      let a = 0.5, f = 1, s = 0, m = 0;
       for (let i = 0; i < (oct || 4); i++) {
         s += a * n(x * f, y * f);
         m += a;
@@ -212,25 +139,15 @@ export function CinematicSanctuary({
       "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")";
 
     function fbmCanvas(
-      W: number,
-      H: number,
-      seed: number,
-      octaves: number,
-      baseCells: number,
-      contrast: number
+      W: number, H: number, seed: number, octaves: number, baseCells: number, contrast: number
     ) {
-      const out = cvs(W, H),
-        o = out.getContext("2d")!;
+      const out = cvs(W, H), o = out.getContext("2d")!;
       o.fillStyle = "#808080";
       o.fillRect(0, 0, W, H);
-      let cells = baseCells || 3,
-        alpha = 1;
+      let cells = baseCells || 3, alpha = 1;
       for (let i = 0; i < (octaves || 5); i++) {
-        const n = cvs(cells, cells),
-          nx = n.getContext("2d")!;
-        const im = nx.createImageData(cells, cells),
-          d = im.data,
-          r = mulberry32(seed + i * 977);
+        const n = cvs(cells, cells), nx = n.getContext("2d")!;
+        const im = nx.createImageData(cells, cells), d = im.data, r = mulberry32(seed + i * 977);
         for (let k = 0; k < cells * cells; k++) {
           const v = 128 + (r() - 0.5) * 255 * (contrast || 1);
           d[k * 4] = d[k * 4 + 1] = d[k * 4 + 2] = clamp(v, 0, 255);
@@ -251,34 +168,28 @@ export function CinematicSanctuary({
     }
 
     function normalFromHeight(hc: HTMLCanvasElement, strength: number) {
-      const W = hc.width,
-        H = hc.height;
-      const b = cvs(W, H),
-        bx = b.getContext("2d")!;
+      const W = hc.width, H = hc.height;
+      const b = cvs(W, H), bx = b.getContext("2d")!;
       bx.filter = "blur(1.1px)";
       bx.drawImage(hc, 0, 0);
       bx.filter = "none";
       const src = bx.getImageData(0, 0, W, H).data;
-      const out = cvs(W, H),
-        ox = out.getContext("2d")!;
-      const im = ox.createImageData(W, H),
-        d = im.data;
+      const out = cvs(W, H), ox = out.getContext("2d")!;
+      const im = ox.createImageData(W, H), d = im.data;
       const at = (x: number, y: number) =>
         src[(((y + H) % H) * W + ((x + W) % W)) * 4] / 255;
-      const s = strength || 2.4;
+      const sv = strength || 2.4;
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
-          const gx = (at(x + 1, y) - at(x - 1, y)) * s;
-          const gy = (at(x, y + 1) - at(x, y - 1)) * s;
-          let nx = -gx,
-            ny = gy,
-            nz = 1;
+          const gx = (at(x + 1, y) - at(x - 1, y)) * sv;
+          const gy = (at(x, y + 1) - at(x, y - 1)) * sv;
+          let nx = -gx, ny = gy, nz = 1;
           const il = 1 / Math.hypot(nx, ny, nz);
-          const i = (y * W + x) * 4;
-          d[i] = (nx * il * 0.5 + 0.5) * 255;
-          d[i + 1] = (ny * il * 0.5 + 0.5) * 255;
-          d[i + 2] = (nz * il * 0.5 + 0.5) * 255;
-          d[i + 3] = 255;
+          const idx = (y * W + x) * 4;
+          d[idx] = (nx * il * 0.5 + 0.5) * 255;
+          d[idx + 1] = (ny * il * 0.5 + 0.5) * 255;
+          d[idx + 2] = (nz * il * 0.5 + 0.5) * 255;
+          d[idx + 3] = 255;
         }
       }
       ox.putImageData(im, 0, 0);
@@ -286,348 +197,89 @@ export function CinematicSanctuary({
     }
 
     /* ------------------------------------------------------- 1 · textures */
-    function texWall() {
-      const W = 1024,
-        H = 1024;
-      const c = cvs(W, H),
-        x = c.getContext("2d")!;
-      x.fillStyle = "#10161a";
-      x.fillRect(0, 0, W, H);
-      x.globalCompositeOperation = "overlay";
-      x.globalAlpha = 0.82;
-      x.drawImage(fbmCanvas(W, H, 41, 6, 3, 1), 0, 0);
-      x.globalAlpha = 1;
-      x.globalCompositeOperation = "source-over";
-
-      const rnd = mulberry32(7);
-      for (let i = 1; i < 6; i++) {
-        const y = (H / 6) * i;
-        x.fillStyle = "rgba(0,0,0,.45)";
-        x.fillRect(0, y - 1.5, W, 3);
-        x.fillStyle = "rgba(190,205,205,.05)";
-        x.fillRect(0, y + 2, W, 2);
-      }
-      for (let i = 0; i < 6; i++) {
-        for (let j = 0; j < 4; j++) {
-          const cx2 = (W / 4) * (j + 0.5) + (rnd() - 0.5) * 14,
-            cy = (H / 6) * (i + 0.5);
-          const g = x.createRadialGradient(cx2, cy, 1, cx2, cy, 11);
-          g.addColorStop(0, "rgba(0,0,0,.5)");
-          g.addColorStop(0.7, "rgba(0,0,0,.18)");
-          g.addColorStop(1, "rgba(0,0,0,0)");
-          x.fillStyle = g;
-          x.beginPath();
-          x.arc(cx2, cy, 11, 0, TAU);
-          x.fill();
-        }
-      }
-      for (let i = 0; i < 190; i++) {
-        const sx = rnd() * W,
-          w = 0.6 + rnd() * 3.4,
-          top = rnd() * H * 0.5,
-          len = H * (0.4 + rnd() * 0.7);
-        const g = x.createLinearGradient(0, top, 0, top + len);
-        const dark = rnd() > 0.45;
-        g.addColorStop(0, "rgba(0,0,0,0)");
-        g.addColorStop(0.25, dark ? "rgba(0,0,0,.20)" : "rgba(170,195,200,.045)");
-        g.addColorStop(1, "rgba(0,0,0,0)");
-        x.fillStyle = g;
-        x.fillRect(sx, top, w, len);
-      }
-      x.globalAlpha = 0.16;
-      x.globalCompositeOperation = "overlay";
-      x.drawImage(fbmCanvas(512, 512, 91, 3, 128, 1.4), 0, 0, W, H);
-      x.globalAlpha = 1;
-      x.globalCompositeOperation = "source-over";
-
-      const h = cvs(W, H),
-        hx = h.getContext("2d")!;
-      hx.fillStyle = "#808080";
-      hx.fillRect(0, 0, W, H);
-      hx.globalAlpha = 0.5;
-      hx.drawImage(fbmCanvas(W, H, 41, 5, 6, 1), 0, 0);
-      hx.globalAlpha = 1;
-      for (let i = 1; i < 6; i++) {
-        hx.fillStyle = "#2a2a2a";
-        hx.fillRect(0, (H / 6) * i - 2, W, 4);
-      }
-      return { map: c, normal: normalFromHeight(h, 2.0) };
-    }
-
     function texFloor() {
-      const W = 1024,
-        H = 1024;
-      const c = cvs(W, H),
-        x = c.getContext("2d")!;
+      const W = 512, H = 512;
+      const c = cvs(W, H), x = c.getContext("2d")!;
       const rnd = mulberry32(23);
       x.fillStyle = "#0a0f12";
       x.fillRect(0, 0, W, H);
-      const N = 4,
-        S_sz = W / N;
+      const N = 4, Ssz = W / N;
       for (let j = 0; j < N; j++) {
         for (let i = 0; i < N; i++) {
           const t = 0.82 + rnd() * 0.36;
           x.fillStyle = hex(12 * t, 17 * t, 20 * t);
-          x.fillRect(i * S_sz + 1.5, j * S_sz + 1.5, S_sz - 3, S_sz - 3);
+          x.fillRect(i * Ssz + 1.5, j * Ssz + 1.5, Ssz - 3, Ssz - 3);
         }
       }
-      x.globalCompositeOperation = "overlay";
-      x.globalAlpha = 0.55;
-      x.drawImage(fbmCanvas(W, H, 63, 6, 4, 1), 0, 0);
-      x.globalAlpha = 1;
-      x.globalCompositeOperation = "source-over";
       x.strokeStyle = "rgba(0,0,0,.72)";
       x.lineWidth = 3;
       for (let i = 0; i <= N; i++) {
-        x.beginPath();
-        x.moveTo(i * S_sz, 0);
-        x.lineTo(i * S_sz, H);
-        x.stroke();
-        x.beginPath();
-        x.moveTo(0, i * S_sz);
-        x.lineTo(W, i * S_sz);
-        x.stroke();
+        x.beginPath(); x.moveTo(i * Ssz, 0); x.lineTo(i * Ssz, H); x.stroke();
+        x.beginPath(); x.moveTo(0, i * Ssz); x.lineTo(W, i * Ssz); x.stroke();
       }
-
-      const h = cvs(W, H),
-        hx = h.getContext("2d")!;
+      const h = cvs(W, H), hx = h.getContext("2d")!;
       hx.fillStyle = "#8c8c8c";
       hx.fillRect(0, 0, W, H);
-      hx.globalAlpha = 0.35;
-      hx.drawImage(fbmCanvas(W, H, 63, 5, 8, 1), 0, 0);
-      hx.globalAlpha = 1;
       hx.strokeStyle = "#303030";
-      hx.lineWidth = 5;
+      hx.lineWidth = 4;
       for (let i = 0; i <= N; i++) {
-        hx.beginPath();
-        hx.moveTo(i * S_sz, 0);
-        hx.lineTo(i * S_sz, H);
-        hx.stroke();
-        hx.beginPath();
-        hx.moveTo(0, i * S_sz);
-        hx.lineTo(W, i * S_sz);
-        hx.stroke();
+        hx.beginPath(); hx.moveTo(i * Ssz, 0); hx.lineTo(i * Ssz, H); hx.stroke();
+        hx.beginPath(); hx.moveTo(0, i * Ssz); hx.lineTo(W, i * Ssz); hx.stroke();
       }
-
-      const r = cvs(512, 512),
-        rx = r.getContext("2d")!;
-      rx.fillStyle = "#1c1c1c";
-      rx.fillRect(0, 0, 512, 512);
-      rx.globalAlpha = 0.95;
-      rx.globalCompositeOperation = "lighten";
-      rx.drawImage(fbmCanvas(512, 512, 77, 4, 3, 1.5), 0, 0);
-      rx.globalAlpha = 1;
-      rx.globalCompositeOperation = "source-over";
-      return { map: c, normal: normalFromHeight(h, 1.5), rough: r };
+      return { map: c, normal: normalFromHeight(h, 1.4) };
     }
 
     function texWood(seed: number, opt?: any) {
-      const o = opt || {},
-        W = 512,
-        H = 512;
-      const c = cvs(W, H),
-        x = c.getContext("2d")!;
-      const h = cvs(W, H),
-        hx = h.getContext("2d")!;
-      const r = cvs(W, H),
-        rx = r.getContext("2d")!;
-      const rnd = mulberry32(seed || 3);
+      const o = opt || {}, W = 256, H = 256;
+      const c = cvs(W, H), x = c.getContext("2d")!;
       const base = o.base || [30, 23, 19];
       x.fillStyle = hex(base[0], base[1], base[2]);
       x.fillRect(0, 0, W, H);
-      hx.fillStyle = "#808080";
-      hx.fillRect(0, 0, W, H);
-      rx.fillStyle = o.rough || "#d6d6d6";
-      rx.fillRect(0, 0, W, H);
-
-      const nb = o.boards === undefined ? 7 : o.boards;
-      const cuts = [0];
-      if (nb > 0) {
-        const ws: number[] = [];
-        let sum = 0;
-        for (let i = 0; i < nb; i++) {
-          const v = 0.7 + rnd() * 0.6;
-          ws.push(v);
-          sum += v;
-        }
-        let acc = 0;
-        ws.forEach((v) => {
-          acc += (v / sum) * W;
-          cuts.push(acc);
-        });
-      } else cuts.push(W);
-
-      const stroke = (pts: number[][], ctx: CanvasRenderingContext2D, style: string, w: number) => {
-        if (pts.length < 2) return;
-        ctx.beginPath();
-        ctx.moveTo(pts[0][0], pts[0][1]);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
-        ctx.strokeStyle = style;
-        ctx.lineWidth = w;
-        ctx.lineCap = "round";
-        ctx.stroke();
-      };
-
-      for (let b = 0; b < cuts.length - 1; b++) {
-        const x0 = cuts[b],
-          x1 = cuts[b + 1],
-          bw = x1 - x0;
-        const tone = 0.8 + rnd() * 0.44;
-        const pith = x0 + bw * (rnd() * 2.8 - 0.9);
-        const d0 = bw * (0.12 + rnd() * 1.7);
-        const amp = bw * (0.1 + rnd() * 0.4);
-        const per = 1 + ((rnd() * 2) | 0),
-          ph = rnd() * TAU;
-        const dAt = (y: number) => d0 + Math.sin((y / H) * TAU * per + ph) * amp;
-        const gap = 2.4 + rnd() * 5.0;
-
-        [x, hx, rx].forEach((d) => {
-          d.save();
-          d.beginPath();
-          d.rect(x0, 0, bw, H);
-          d.clip();
-        });
-        x.fillStyle = hex(base[0] * tone, base[1] * tone, base[2] * tone);
-        x.fillRect(x0, 0, bw, H);
-
-        for (let k = 1; k * gap < bw * 3.4 + d0 + amp; k++) {
-          const rr = k * gap * (0.88 + rnd() * 0.24);
-          const dark = 0.42 + rnd() * 0.38,
-            wide = 0.8 + rnd() * 1.9;
-          for (const side of [-1, 1]) {
-            let pts: number[][] = [];
-            const flush = () => {
-              stroke(pts, x, "rgba(0,0,0," + dark.toFixed(2) + ")", wide);
-              stroke(pts, hx, "rgba(0,0,0," + (dark * 0.8).toFixed(2) + ")", wide);
-              stroke(
-                pts.map((q) => [q[0] + side * (wide + 0.6), q[1]]),
-                x,
-                "rgba(150,120,96," + (dark * 0.3).toFixed(2) + ")",
-                wide * 0.7
-              );
-              pts = [];
-            };
-            for (let y = -3; y <= H + 3; y += 3) {
-              const d = dAt(y),
-                q = rr * rr - d * d;
-              if (q <= 0) {
-                flush();
-                continue;
-              }
-              pts.push([pith + side * Math.sqrt(q), y]);
-            }
-            flush();
-          }
-        }
-        [x, hx, rx].forEach((d) => d.restore());
-      }
-      return { map: c, normal: normalFromHeight(h, o.relief || 2.4), rough: r };
-    }
-
-    function texStone(seed: number, opt?: any) {
-      const o = opt || {},
-        W = 512,
-        H = 512;
-      const c = cvs(W, H),
-        x = c.getContext("2d")!;
-      const h = cvs(W, H),
-        hx = h.getContext("2d")!;
-      const r = cvs(W, H),
-        rx = r.getContext("2d")!;
-      const rnd = mulberry32(seed || 17);
-      const base = o.base || [46, 51, 53];
-      x.fillStyle = hex(base[0], base[1], base[2]);
-      x.fillRect(0, 0, W, H);
-      hx.fillStyle = "#808080";
-      hx.fillRect(0, 0, W, H);
-      rx.fillStyle = "#e8e8e8";
-      rx.fillRect(0, 0, W, H);
-
-      const speck = (n: number, fill: (r: any) => string, smin: number, smax: number) => {
-        for (let i = 0; i < n; i++) {
-          const s = smin + rnd() * (smax - smin),
-            px = rnd() * W,
-            py = rnd() * H;
-          x.fillStyle = fill(rnd);
-          x.beginPath();
-          x.ellipse(px, py, s, s * (0.55 + rnd() * 0.85), rnd() * TAU, 0, TAU);
-          x.fill();
-        }
-      };
-      speck(3400, (q) => "rgba(206,210,204," + (0.06 + q() * 0.2) + ")", 0.6, 2.8);
-      speck(2000, (q) => "rgba(126,136,134," + (0.07 + q() * 0.2) + ")", 0.8, 3.4);
-      speck(1300, (q) => "rgba(8,10,12," + (0.14 + q() * 0.38) + ")", 0.5, 2.4);
-
-      return { map: c, normal: normalFromHeight(h, o.relief || 3.2), rough: r };
-    }
-
-    function texLacquer() {
-      const W = 512,
-        H = 512;
-      const wood = texWood(131, { base: [34, 22, 17], boards: 0 });
-      const c = cvs(W, H),
-        x = c.getContext("2d")!;
-      const h = cvs(W, H),
-        hx = h.getContext("2d")!;
-      const r = cvs(W, H),
-        rx = r.getContext("2d")!;
-      x.drawImage(wood.map, 0, 0);
-      hx.fillStyle = "#808080";
-      hx.fillRect(0, 0, W, H);
-      rx.fillStyle = "#8c8c8c";
-
-      x.globalAlpha = 0.8;
-      x.fillStyle = "#7c1610";
-      x.fillRect(0, 0, W, H);
-      x.globalAlpha = 1;
-      x.globalCompositeOperation = "multiply";
-      x.globalAlpha = 0.42;
-      x.drawImage(wood.map, 0, 0);
+      x.globalCompositeOperation = "overlay";
+      x.globalAlpha = 0.35;
+      x.drawImage(fbmCanvas(W, H, seed, 3, 4, 1), 0, 0);
       x.globalAlpha = 1;
       x.globalCompositeOperation = "source-over";
+      return { map: c };
+    }
 
-      return { map: c, normal: normalFromHeight(h, 2.2), rough: r };
+    function texStone(seed: number) {
+      const W = 256, H = 256;
+      const c = cvs(W, H), x = c.getContext("2d")!;
+      x.fillStyle = "#2e3335";
+      x.fillRect(0, 0, W, H);
+      x.globalCompositeOperation = "overlay";
+      x.globalAlpha = 0.4;
+      x.drawImage(fbmCanvas(W, H, seed, 3, 8, 1), 0, 0);
+      x.globalAlpha = 1;
+      x.globalCompositeOperation = "source-over";
+      return { map: c };
     }
 
     function texShoji() {
-      const W = 1024,
-        H = 768,
-        c = cvs(W, H),
-        x = c.getContext("2d")!;
-      x.clearRect(0, 0, W, H);
-      x.fillStyle = "rgba(228,222,206,.055)";
+      const W = 512, H = 384, c = cvs(W, H), x = c.getContext("2d")!;
+      x.fillStyle = "rgba(228,222,206,.06)";
       x.fillRect(0, 0, W, H);
       x.strokeStyle = "rgba(10,8,7,.88)";
-      const cols = 12,
-        rows = 9;
-      x.lineWidth = 5;
+      const cols = 8, rows = 6;
+      x.lineWidth = 4;
       for (let i = 1; i < cols; i++) {
-        x.beginPath();
-        x.moveTo((W / cols) * i, 0);
-        x.lineTo((W / cols) * i, H);
-        x.stroke();
+        x.beginPath(); x.moveTo((W / cols) * i, 0); x.lineTo((W / cols) * i, H); x.stroke();
       }
       for (let j = 1; j < rows; j++) {
-        x.beginPath();
-        x.moveTo(0, (H / rows) * j);
-        x.lineTo(W, (H / rows) * j);
-        x.stroke();
+        x.beginPath(); x.moveTo(0, (H / rows) * j); x.lineTo(W, (H / rows) * j); x.stroke();
       }
-      x.lineWidth = 13;
-      x.strokeStyle = "rgba(8,6,5,.95)";
+      x.lineWidth = 8;
       x.strokeRect(0, 0, W, H);
       return c;
     }
 
     function texLeaf() {
-      const S_sz = 128,
-        c = cvs(S_sz, S_sz),
-        x = c.getContext("2d")!;
-      x.translate(S_sz / 2, S_sz * 0.92);
-      x.scale(S_sz / 2.2, -S_sz / 2.2);
+      const Ssz = 128, c = cvs(Ssz, Ssz), x = c.getContext("2d")!;
+      x.translate(Ssz / 2, Ssz * 0.92);
+      x.scale(Ssz / 2.2, -Ssz / 2.2);
       x.beginPath();
-      const lobes = 5,
-        spread = 1.9;
+      const lobes = 5, spread = 1.9;
       for (let i = 0; i < lobes; i++) {
         const a = -spread / 2 + spread * (i / (lobes - 1)) + Math.PI / 2;
         const len = i === 2 ? 0.96 : i === 1 || i === 3 ? 0.82 : 0.6;
@@ -644,10 +296,7 @@ export function CinematicSanctuary({
     }
 
     function texSky() {
-      const W = 512,
-        H = 512,
-        c = cvs(W, H),
-        x = c.getContext("2d")!;
+      const W = 512, H = 512, c = cvs(W, H), x = c.getContext("2d")!;
       const g = x.createLinearGradient(0, 0, 0, H);
       g.addColorStop(0, "rgb(6,10,15)");
       g.addColorStop(0.34, "rgb(13,22,31)");
@@ -657,10 +306,8 @@ export function CinematicSanctuary({
       x.fillStyle = g;
       x.fillRect(0, 0, W, H);
       const rnd = mulberry32(881);
-      for (let i = 0; i < 420; i++) {
-        const sx = rnd() * W,
-          sy = rnd() * H * 0.78,
-          r = 0.5 + rnd() * rnd() * 1.7;
+      for (let i = 0; i < 280; i++) {
+        const sx = rnd() * W, sy = rnd() * H * 0.78, r = 0.5 + rnd() * rnd() * 1.5;
         x.fillStyle = "rgba(214,232,240," + (0.12 + rnd() * 0.42) * (1 - sy / H) + ")";
         x.beginPath();
         x.arc(sx, sy, r, 0, TAU);
@@ -670,20 +317,13 @@ export function CinematicSanctuary({
     }
 
     function texRidge() {
-      const W = 2048,
-        H = 512,
-        c = cvs(W, H),
-        x = c.getContext("2d")!;
-      const n = noise2D(1207),
-        rnd = mulberry32(1207);
+      const W = 1024, H = 256, c = cvs(W, H), x = c.getContext("2d")!;
+      const n = noise2D(1207);
       x.beginPath();
       x.moveTo(0, H);
       for (let i = 0; i <= W; i += 4) {
         const t = i / W;
-        const ridge =
-          0.46 +
-          0.3 * (fbm(n, t * 2.4, 0.5, 4, 2.1, 0.55) * 0.5 + 0.5) +
-          0.16 * (fbm(n, t * 7.5, 3.1, 3, 2.2, 0.5) * 0.5 + 0.5);
+        const ridge = 0.46 + 0.3 * (fbm(n, t * 2.4, 0.5, 3, 2.1, 0.55) * 0.5 + 0.5);
         x.lineTo(i, H - ridge * H * 0.84);
       }
       x.lineTo(W, H);
@@ -693,79 +333,34 @@ export function CinematicSanctuary({
       return c;
     }
 
-    function texRoof() {
-      const W = 512,
-        H = 512,
-        c = cvs(W, H),
-        x = c.getContext("2d")!;
-      const h = cvs(W, H),
-        hx = h.getContext("2d")!;
-      x.fillStyle = "#151c20";
-      x.fillRect(0, 0, W, H);
-      hx.fillStyle = "#606060";
-      hx.fillRect(0, 0, W, H);
-      const ribs = 14,
-        s = W / ribs;
-      for (let i = 0; i < ribs; i++) {
-        const g = x.createLinearGradient(i * s, 0, (i + 1) * s, 0);
-        g.addColorStop(0, "rgba(0,0,0,.62)");
-        g.addColorStop(0.3, "rgba(148,178,192,.13)");
-        g.addColorStop(0.66, "rgba(84,110,124,.05)");
-        g.addColorStop(1, "rgba(0,0,0,.62)");
-        x.fillStyle = g;
-        x.fillRect(i * s, 0, s, H);
-      }
-      return { map: c, normal: normalFromHeight(h, 2.2) };
-    }
-
     function texMoon() {
-      const S_sz = 512,
-        c = cvs(S_sz, S_sz),
-        x = c.getContext("2d")!;
-      const R = S_sz / 2 - 1;
+      const Ssz = 256, c = cvs(Ssz, Ssz), x = c.getContext("2d")!;
+      const R = Ssz / 2 - 1;
       x.beginPath();
-      x.arc(S_sz / 2, S_sz / 2, R, 0, TAU);
+      x.arc(Ssz / 2, Ssz / 2, R, 0, TAU);
       x.closePath();
       x.save();
       x.clip();
-      const g = x.createRadialGradient(S_sz * 0.46, S_sz * 0.44, S_sz * 0.05, S_sz / 2, S_sz / 2, R);
-      g.addColorStop(0, "rgb(150,150,150)");
-      g.addColorStop(0.55, "rgb(158,158,158)");
-      g.addColorStop(0.86, "rgb(178,178,178)");
-      g.addColorStop(1, "rgb(196,196,196)");
+      const g = x.createRadialGradient(Ssz * 0.46, Ssz * 0.44, Ssz * 0.05, Ssz / 2, Ssz / 2, R);
+      g.addColorStop(0, "rgb(160,160,160)");
+      g.addColorStop(0.55, "rgb(170,170,170)");
+      g.addColorStop(0.86, "rgb(190,190,190)");
+      g.addColorStop(1, "rgb(210,210,210)");
       x.fillStyle = g;
-      x.fillRect(0, 0, S_sz, S_sz);
+      x.fillRect(0, 0, Ssz, Ssz);
       x.restore();
       return c;
     }
 
     function texGlow(inner?: string, mid?: string) {
-      const S_sz = 256,
-        c = cvs(S_sz, S_sz),
-        x = c.getContext("2d")!;
-      const g = x.createRadialGradient(S_sz / 2, S_sz / 2, 0, S_sz / 2, S_sz / 2, S_sz / 2);
+      const Ssz = 128, c = cvs(Ssz, Ssz), x = c.getContext("2d")!;
+      const g = x.createRadialGradient(Ssz / 2, Ssz / 2, 0, Ssz / 2, Ssz / 2, Ssz / 2);
       g.addColorStop(0, inner || "rgba(255,255,255,1)");
       g.addColorStop(0.28, mid || "rgba(255,255,255,.36)");
       g.addColorStop(0.62, "rgba(255,255,255,.07)");
       g.addColorStop(1, "rgba(255,255,255,0)");
       x.fillStyle = g;
-      x.fillRect(0, 0, S_sz, S_sz);
-      return c;
-    }
-
-    function texWisp() {
-      const S_sz = 128,
-        c = cvs(S_sz, S_sz),
-        x = c.getContext("2d")!;
-      const g = x.createRadialGradient(S_sz / 2, S_sz / 2, 0, S_sz / 2, S_sz / 2, S_sz / 2);
-      g.addColorStop(0, "rgba(255,255,255,1)");
-      g.addColorStop(0.07, "rgba(236,250,250,.92)");
-      g.addColorStop(0.16, "rgba(190,230,238,.40)");
-      g.addColorStop(0.34, "rgba(132,192,212,.13)");
-      g.addColorStop(0.62, "rgba(88,146,172,.035)");
-      g.addColorStop(1, "rgba(70,120,142,0)");
-      x.fillStyle = g;
-      x.fillRect(0, 0, S_sz, S_sz);
+      x.fillRect(0, 0, Ssz, Ssz);
       return c;
     }
 
@@ -781,12 +376,14 @@ export function CinematicSanctuary({
         alpha: false,
         powerPreference: "high-performance",
       });
-    } catch (e) {
+    } catch {
       setHasWebGL(false);
       return;
     }
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
+    const isMobile = window.innerWidth <= 820;
+    const DPR_CAP = isMobile ? 1.0 : 1.8;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, DPR_CAP));
     renderer.setSize(vpW(), vpH(), true);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -804,13 +401,11 @@ export function CinematicSanctuary({
     S.camera = camera;
     S.world.uT = { value: 0 };
 
-    const maxAniso = renderer.capabilities.getMaxAnisotropy();
     function tx(canvasEl: HTMLCanvasElement, o?: any) {
       const opt = o || {};
       const t = new THREE.CanvasTexture(canvasEl);
       t.wrapS = t.wrapT = opt.wrap || THREE.ClampToEdgeWrapping;
       if (opt.repeat) t.repeat.set(opt.repeat[0], opt.repeat[1]);
-      t.anisotropy = Math.min(opt.aniso || 8, maxAniso);
       t.needsUpdate = true;
       return t;
     }
@@ -818,10 +413,6 @@ export function CinematicSanctuary({
 
     /* ------------------------------------------------------- 3 · World Build */
     const PODIUM = 7.0;
-    const STEPS = 40;
-    const STAIR_Z0 = -11.0;
-    const STAIR_RUN = 0.55;
-    const STAIR_W = 8.4;
     const TEMPLE_Z = -44;
 
     // Sky & Ridge
@@ -856,12 +447,11 @@ export function CinematicSanctuary({
       scene.add(m);
     });
 
-    // Floor & Steps
+    // Floor
     const fT = texFloor();
     const floorMat = new THREE.MeshStandardMaterial({
-      map: tx(fT.map, { wrap: THREE.RepeatWrapping, repeat: [7, 7], aniso: 16 }),
+      map: tx(fT.map, { wrap: THREE.RepeatWrapping, repeat: [7, 7] }),
       normalMap: tx(fT.normal, { wrap: THREE.RepeatWrapping, repeat: [7, 7] }),
-      roughnessMap: tx(fT.rough, { wrap: THREE.RepeatWrapping, repeat: [3.4, 3.4] }),
       roughness: 0.74,
       metalness: 0.06,
       color: 0x69757a,
@@ -874,29 +464,10 @@ export function CinematicSanctuary({
 
     // Temple geometry
     const timberMat = new THREE.MeshStandardMaterial({
-      map: tx(texWood(3, { boards: 7 }).map, { wrap: THREE.RepeatWrapping, repeat: [4, 1.6] }),
+      map: tx(texWood(3).map, { wrap: THREE.RepeatWrapping, repeat: [4, 1.6] }),
       roughness: 0.8,
       metalness: 0.05,
       color: 0x565150,
-    });
-    const postMat = new THREE.MeshStandardMaterial({
-      map: tx(texWood(29, { boards: 0 }).map, { wrap: THREE.RepeatWrapping, repeat: [1.1, 1.0] }),
-      roughness: 0.7,
-      metalness: 0.03,
-      color: 0x8a746d,
-    });
-    const goldMat = new THREE.MeshStandardMaterial({
-      color: 0x8f6f2e,
-      roughness: 0.38,
-      metalness: 0.78,
-    });
-    const rf = texRoof();
-    const tileMat = new THREE.MeshStandardMaterial({
-      map: tx(rf.map, { wrap: THREE.RepeatWrapping, repeat: [1, 1] }),
-      normalMap: tx(rf.normal, { wrap: THREE.RepeatWrapping, repeat: [1, 1] }),
-      roughness: 0.74,
-      metalness: 0.1,
-      color: 0x2b343a,
     });
 
     const paperMat = new THREE.MeshBasicMaterial({
@@ -910,22 +481,55 @@ export function CinematicSanctuary({
       fog: true,
     });
 
+    // Sanmon Pagoda Hall
+    const templeGroup = new THREE.Group();
+    const core = new THREE.Mesh(new THREE.BoxGeometry(13.6, 5.0, 8.2), timberMat);
+    core.position.set(0, PODIUM + 2.5, TEMPLE_Z);
+    core.castShadow = true;
+    templeGroup.add(core);
+
+    // Shoji Screen windows
+    for (let i = 0; i < 5; i++) {
+      const xi = -5.6 + i * 2.8;
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(1.55, 2.5), paperMat);
+      p.position.set(xi, PODIUM + 2.6, TEMPLE_Z + 4.16);
+      templeGroup.add(p);
+      const sv = new THREE.Mesh(new THREE.PlaneGeometry(1.55, 2.5), gridMat);
+      sv.position.set(xi, PODIUM + 2.6, TEMPLE_Z + 4.2);
+      templeGroup.add(sv);
+    }
+    // Upper storey
+    const upperCore = new THREE.Mesh(new THREE.BoxGeometry(10.0, 3.4, 6.0), timberMat);
+    upperCore.position.set(0, PODIUM + 9.4, TEMPLE_Z);
+    upperCore.castShadow = true;
+    templeGroup.add(upperCore);
+
+    // Roofs
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x222a30, roughness: 0.75 });
+    const lowerRoof = new THREE.Mesh(new THREE.ConeGeometry(11, 3.5, 4), roofMat);
+    lowerRoof.position.set(0, PODIUM + 6.8, TEMPLE_Z);
+    lowerRoof.rotation.y = Math.PI / 4;
+    lowerRoof.castShadow = true;
+    templeGroup.add(lowerRoof);
+
+    const upperRoof = new THREE.Mesh(new THREE.ConeGeometry(8.5, 3.0, 4), roofMat);
+    upperRoof.position.set(0, PODIUM + 12.5, TEMPLE_Z);
+    upperRoof.rotation.y = Math.PI / 4;
+    upperRoof.castShadow = true;
+    templeGroup.add(upperRoof);
+
+    scene.add(templeGroup);
+
     // Torii Gate
     const lacMat = new THREE.MeshStandardMaterial({
-      map: tx(texLacquer().map, { wrap: THREE.RepeatWrapping, repeat: [2, 2] }),
       color: hdr(1.72, 1.02, 0.94),
       roughness: 0.92,
       metalness: 0.05,
     });
     const toriiGroup = new THREE.Group();
-    const TORII_BASE = 0.78,
-      TORII_H = 8.2,
-      TORII_SPAN = 3.55;
+    const TORII_BASE = 0.78, TORII_H = 8.2, TORII_SPAN = 3.55;
     [-1, 1].forEach((s) => {
-      const col = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.3, 0.38, TORII_H, 26),
-        lacMat
-      );
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, TORII_H, 16), lacMat);
       col.position.set(s * TORII_SPAN, TORII_BASE + TORII_H / 2, 0);
       col.castShadow = true;
       toriiGroup.add(col);
@@ -934,6 +538,10 @@ export function CinematicSanctuary({
     nuki.position.set(0, TORII_BASE + TORII_H - 2.15, 0);
     nuki.castShadow = true;
     toriiGroup.add(nuki);
+    // Kasagi (top beam)
+    const kasagi = new THREE.Mesh(new THREE.BoxGeometry(10.6, 0.38, 0.62), lacMat);
+    kasagi.position.set(0, TORII_BASE + TORII_H - 0.05, 0);
+    toriiGroup.add(kasagi);
 
     const GS = 0.72;
     toriiGroup.position.set(0, -TORII_BASE * GS, -8.6);
@@ -971,39 +579,103 @@ export function CinematicSanctuary({
     scene.add(moonHalo);
     S.world.moonHalo = moonHalo;
 
-    // Lights
+    // Hall glow halo (warm interior glow visible through shoji)
+    const hallHalo = new THREE.Mesh(
+      new THREE.PlaneGeometry(16, 10),
+      new THREE.MeshBasicMaterial({
+        map: tx(texGlow("rgba(255,180,100,.7)", "rgba(255,120,60,.2)")),
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fog: false,
+        opacity: 0.30,
+      })
+    );
+    hallHalo.position.set(0, PODIUM + 3, TEMPLE_Z + 5);
+    scene.add(hallHalo);
+    S.world.hallHalo = hallHalo;
+
+    /* -------------------------------------------------------- Lighting (matching reference) */
+    // Hemisphere ambient
     scene.add(new THREE.HemisphereLight(0x53838f, 0x060a08, 0.13));
+
+    // Key directional light with shadow
     const keyLight = new THREE.DirectionalLight(0xb6dbe4, 1.22);
     keyLight.position.set(2.6, 21, 2.5);
+    keyLight.target.position.set(0, 2.2, -12.5);
+    scene.add(keyLight.target);
     keyLight.castShadow = true;
+    const shadowRes = isMobile ? 1024 : 2048;
+    keyLight.shadow.mapSize.set(shadowRes, shadowRes);
+    const sc = keyLight.shadow.camera;
+    sc.left = -26; sc.right = 26; sc.top = 34; sc.bottom = -16; sc.near = 3; sc.far = 78;
+    keyLight.shadow.bias = -0.0012;
+    keyLight.shadow.normalBias = 0.035;
+    keyLight.shadow.radius = 2.2;
+    keyLight.shadow.autoUpdate = false;
     scene.add(keyLight);
+    S.world.key = keyLight;
 
+    // Moonlight directional (rim light on roofs — without it the hall is a flat cutout)
+    const moonKey = new THREE.DirectionalLight(0xff6a42, 0.52);
+    moonKey.position.set(26, 30, -60);
+    moonKey.target.position.set(0, 8, -40);
+    scene.add(moonKey.target);
+    scene.add(moonKey);
+
+    // Hall interior lamps
     const hallLight = new THREE.PointLight(0xff8a26, 2.3, 15, 2);
     hallLight.position.set(0, PODIUM + 1.2, TEMPLE_Z + 8.6);
     scene.add(hallLight);
     S.world.hallLight = hallLight;
+    // Wing lights flanking the hall
+    [-1, 1].forEach((sv) => {
+      const w = new THREE.PointLight(0xff8420, 2.2, 11, 2);
+      w.position.set(sv * 11.4, PODIUM + 1.2, TEMPLE_Z + 5.6);
+      scene.add(w);
+    });
+
+    // Moon point light (keeps it attached to the scene instead of floating on top)
+    const moonL = new THREE.PointLight(0xff3a1c, 3.0, 46, 2);
+    moonL.position.set(11.0, 17.0, -24.0);
+    scene.add(moonL);
+
+    // Fill light (cool blue — separates mid-ground from background)
+    const fill = new THREE.PointLight(0x86c6d2, 0.95, 30, 2);
+    fill.position.set(-1, 13.5, -16.0);
+    scene.add(fill);
+
+    // Stair light (the flight is the spine of the composition)
+    const stairL = new THREE.PointLight(0xffa049, 4.2, 17, 2);
+    stairL.position.set(0, 7.6, -26.0);
+    scene.add(stairL);
+
+    // Bake shadow map once after scene is built
+    setTimeout(() => {
+      if (!destroyed && S.world.key) {
+        S.world.key.shadow.needsUpdate = true;
+      }
+    }, 200);
 
     // Lanterns
     const lanternMat = new THREE.MeshStandardMaterial({
-      map: tx(texStone(17).map, { wrap: THREE.RepeatWrapping, repeat: [1.5, 1.5] }),
+      map: tx(texStone(17).map),
       color: 0x9aa5a5,
       roughness: 0.8,
     });
     const lanternPositions = [
-      [7.4, -7.0],
-      [-7.6, -5.2],
-      [5.5, -14.4],
-      [-5.5, -14.4],
-      [5.2, -23.5],
-      [-5.2, -23.5],
+      [7.4, -7.0], [-7.6, -5.2],
+      [5.5, -14.4], [-5.5, -14.4],
+      [5.2, -23.5], [-5.2, -23.5],
     ];
     S.world.lanternLights = [];
+    S.world.lanternGlows = [] as THREE.Mesh[];
     lanternPositions.forEach(([lx, lz]) => {
       const g = new THREE.Group();
-      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.52, 0.26, 16), lanternMat);
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.52, 0.26, 12), lanternMat);
       base.position.y = 0.13;
       g.add(base);
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 1.02, 12), lanternMat);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 1.02, 10), lanternMat);
       pole.position.y = 0.77;
       g.add(pole);
       const lamp = new THREE.PointLight(0xff5a24, 2.6, 9, 2);
@@ -1023,13 +695,47 @@ export function CinematicSanctuary({
       );
       flare.position.y = 1.66;
       g.add(flare);
+      S.world.lanternGlows.push(flare);
 
       g.position.set(lx, 0, lz);
       scene.add(g);
     });
 
+    /* -------------------------------------------------------- Drifting haze slabs (atmosphere) */
+    const hazeTex = tx(texGlow("rgba(160,205,210,.55)", "rgba(110,165,175,.18)"));
+    S.world.haze = [];
+    const hazeRnd = mulberry32(66);
+    const hazeCount = isMobile ? 4 : 6;
+    for (let i = 0; i < hazeCount; i++) {
+      const hs = 12 + hazeRnd() * 15;
+      const h = new THREE.Mesh(
+        new THREE.PlaneGeometry(hs, hs * 0.55),
+        new THREE.MeshBasicMaterial({
+          map: hazeTex,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          fog: false,
+          opacity: 0.05 + hazeRnd() * 0.07,
+        })
+      );
+      h.position.set(
+        (hazeRnd() - 0.5) * 44,
+        1.5 + hazeRnd() * 10,
+        -38 + hazeRnd() * 40
+      );
+      h.renderOrder = 4;
+      (h as any).userData = {
+        sp: 0.06 + hazeRnd() * 0.12,
+        ph: hazeRnd() * TAU,
+        x0: h.position.x,
+      };
+      scene.add(h);
+      S.world.haze.push(h);
+    }
+
     // Embers
-    const N_EMBERS = 260;
+    const N_EMBERS = isMobile ? 220 : 460;
     const embPos = new Float32Array(N_EMBERS * 3);
     const embSeed = new Float32Array(N_EMBERS);
     const rndEmb = mulberry32(66);
@@ -1073,10 +779,13 @@ export function CinematicSanctuary({
       `,
     });
     const embers = new THREE.Points(embGeo, embMat);
+    embers.frustumCulled = false;
+    embers.renderOrder = 5;
     scene.add(embers);
+    S.world.embers = embers;
 
     // Leaves
-    const N_LEAVES = 180;
+    const N_LEAVES = isMobile ? 80 : 170;
     const leafMat = new THREE.MeshStandardMaterial({
       map: tx(texLeaf()),
       alphaTest: 0.42,
@@ -1109,31 +818,39 @@ export function CinematicSanctuary({
 
     /* ------------------------------------------------ 4 · Camera Rig Spline */
     const CAM_WAYPOINTS = [
-      { p: [0.0, 4.05, 13.6], t: [0.0, 6.6, -18.0], fov: 36 }, // 0 Intro
-      { p: [-5.6, 2.35, 11.6], t: [1.2, 5.6, -14.0], fov: 48 }, // 1 About
-      { p: [1.2, 3.6, 2.2], t: [-0.6, 7.5, -22.0], fov: 40 }, // 2 Projects
-      { p: [5.2, 2.1, -3.4], t: [-2.6, 7.0, -20.0], fov: 46 }, // 3 Skills
-      { p: [0.0, 7.6, -16.0], t: [0.0, 13.0, -40.0], fov: 42 }, // 4 Experience
-      { p: [0.0, 10.5, -20.0], t: [0.0, 3.0, -34.0], fov: 46 }, // 5 Contact
+      { p: [0.0, 4.05, 13.6], t: [0.0, 6.60, -18.0], fov: 36 },   // 0 Intro
+      { p: [-5.6, 2.35, 11.6], t: [1.2, 5.60, -14.0], fov: 48 },   // 1 About
+      { p: [1.2, 3.60, 2.2], t: [-0.6, 7.50, -22.0], fov: 40 },    // 2 Projects
+      { p: [5.2, 2.10, -3.4], t: [-2.6, 7.00, -20.0], fov: 46 },   // 3 Skills
+      { p: [0.0, 7.60, -16.0], t: [0.0, 13.0, -40.0], fov: 42 },   // 4 Experience
+      { p: [0.0, 10.5, -20.0], t: [0.0, 3.00, -34.0], fov: 46 },   // 5 Contact
     ];
 
     S.curveP = new THREE.CatmullRomCurve3(
       CAM_WAYPOINTS.map((c) => new THREE.Vector3(c.p[0], c.p[1], c.p[2])),
-      false,
-      "catmullrom",
-      0.42
+      false, "catmullrom", 0.42
     );
     S.curveT = new THREE.CatmullRomCurve3(
       CAM_WAYPOINTS.map((c) => new THREE.Vector3(c.t[0], c.t[1], c.t[2])),
-      false,
-      "catmullrom",
-      0.42
+      false, "catmullrom", 0.42
     );
-    S.tmpCam = new THREE.PerspectiveCamera(CAM_WAYPOINTS[0].fov, vpW() / vpH(), 0.35, 220);
 
     const _p = new THREE.Vector3(),
       _t = new THREE.Vector3(),
       _d = new THREE.Vector3();
+
+    // Aspect fix: on tall screens, step back to keep composition
+    function aspectFix() {
+      return clamp((1.62 - vpW() / vpH()) / 1.05, 0, 1);
+    }
+    function fitAspect(p: THREE.Vector3, t: THREE.Vector3, fov: number) {
+      const nf = aspectFix();
+      if (nf <= 0) return fov;
+      _d.subVectors(p, t).normalize();
+      p.addScaledVector(_d, nf * 8.2);
+      p.y += nf * 1.1;
+      return fov * (1 + nf * 0.40);
+    }
 
     function applyCamera() {
       const N = CAM_WAYPOINTS.length - 1;
@@ -1145,11 +862,14 @@ export function CinematicSanctuary({
         f = clamp(S.rig.smooth - i, 0, 1);
       let fov = lerp(CAM_WAYPOINTS[i].fov, CAM_WAYPOINTS[i + 1].fov, f);
 
-      // Parallax
+      // Aspect-adaptive camera (matches reference fitAspect)
+      fov = fitAspect(_p, _t, fov);
+
+      // Parallax — a hand-held drift, never enough to break the frame
       const par = 1 - smooth(0, 1.6, S.rig.smooth) * 0.55;
       _p.x += S.rig.mx * 0.62 * par;
       _p.y += S.rig.my * 0.34 * par;
-      _t.x -= S.rig.mx * 0.2 * par;
+      _t.x -= S.rig.mx * 0.20 * par;
       _t.y -= S.rig.my * 0.12 * par;
 
       camera.position.copy(_p);
@@ -1158,6 +878,41 @@ export function CinematicSanctuary({
         camera.fov = fov;
         camera.updateProjectionMatrix();
       }
+    }
+
+    /* ---- Scroll progress calculation (done inside the render loop, reading scrollY directly) */
+    /* This avoids event-based jitter. The reference reads scrollY in frame() directly. */
+    const SECS_IDS = ["intro", "about", "projects", "skills", "experience", "contact"];
+    let anchors: number[] = [];
+    let maxScroll = 1;
+
+    function measure() {
+      const secs = SECS_IDS.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+      maxScroll = Math.max(1, document.documentElement.scrollHeight - vpH());
+      if (secs.length === 6) {
+        anchors = secs.map((el, i) => {
+          if (i === 0) return 0;
+          if (i === secs.length - 1) return maxScroll;
+          return clamp(el.offsetTop + el.offsetHeight * 0.5 - vpH() * 0.5, 0, maxScroll);
+        });
+        // Ensure monotonically increasing
+        for (let i = 1; i < anchors.length; i++) {
+          anchors[i] = Math.max(anchors[i], anchors[i - 1] + 1);
+        }
+      } else {
+        anchors = [0, maxScroll * 0.2, maxScroll * 0.4, maxScroll * 0.6, maxScroll * 0.8, maxScroll];
+      }
+    }
+
+    function progressFor(y: number) {
+      if (anchors.length < 2) return 0;
+      if (y <= anchors[0]) return 0;
+      for (let i = 0; i < anchors.length - 1; i++) {
+        if (y <= anchors[i + 1]) {
+          return i + (y - anchors[i]) / (anchors[i + 1] - anchors[i]);
+        }
+      }
+      return anchors.length - 1;
     }
 
     // Pointer move listener
@@ -1169,15 +924,23 @@ export function CinematicSanctuary({
 
     // Resize listener
     const onResize = () => {
-      const w = vpW(),
-        h = vpH();
+      const w = vpW(), h = vpH();
       renderer.setSize(w, h, true);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      measure();
+      if (S.world.key) S.world.key.shadow.needsUpdate = true;
+      if (S.world.embers) {
+        S.world.embers.material.uniforms.uSize.value = h * renderer.getPixelRatio() * 0.5;
+      }
     };
     window.addEventListener("resize", onResize, { passive: true });
 
-    /* ------------------------------------------------ 5 · Render Loop */
+    // Initial measure (deferred slightly to allow layout)
+    setTimeout(measure, 100);
+    setTimeout(measure, 500);
+
+    /* ------------------------------------------------ 5 · Render Loop (SINGLE loop) */
     const LEAF_M = new THREE.Matrix4(),
       LEAF_Q = new THREE.Quaternion(),
       LEAF_E = new THREE.Euler(),
@@ -1188,8 +951,7 @@ export function CinematicSanctuary({
     function updateLeaves(dt: number) {
       const LV = S.world.leaves;
       if (!LV) return;
-      const cy = camera.position.y,
-        L = LV.list;
+      const cy = camera.position.y, L = LV.list;
       camera.getWorldDirection(LEAF_F);
       LEAF_F.y = 0;
       if (LEAF_F.lengthSq() < 1e-6) LEAF_F.set(0, 0, -1);
@@ -1205,8 +967,7 @@ export function CinematicSanctuary({
         l.tilt += l.spin * dt;
         if (l.y < cy - 10) {
           l.y = cy + 16;
-          const a = Math.random() * TAU,
-            r = Math.sqrt(Math.random()) * 12;
+          const a = Math.random() * TAU, r = Math.sqrt(Math.random()) * 12;
           l.x = fx + Math.cos(a) * r;
           l.z = fz + Math.sin(a) * r;
         }
@@ -1225,37 +986,81 @@ export function CinematicSanctuary({
       LV.mesh.instanceMatrix.needsUpdate = true;
     }
 
-    S.running = true;
-    S.tPrev = performance.now();
-
-    function renderFrame(now: number) {
-      if (destroyed) return;
-      const dt = Math.min((now - S.tPrev) / 1000 || 0, 0.05);
-      S.tPrev = now;
-      S.clock += dt;
+    function updateWorld(dt: number) {
       S.world.uT.value = S.clock;
 
-      // Smooth camera progression
-      S.rig.smooth = damp(S.rig.smooth, S.rig.prog, 4.8, dt);
-      S.rig.mx = damp(S.rig.mx, S.rig.tmx, 2.6, dt);
-      S.rig.my = damp(S.rig.my, S.rig.tmy, 2.6, dt);
+      // Moon halo breathing
+      if (S.world.moonHalo) {
+        S.world.moonHalo.material.opacity = 0.44 + Math.sin(S.clock * 0.34) * 0.05;
+      }
+
+      // Hall halo breathing
+      if (S.world.hallHalo) {
+        S.world.hallHalo.material.opacity = 0.30 + Math.sin(S.clock * 0.6) * 0.035;
+      }
+
+      // Hall light breathing
+      if (S.world.hallLight) {
+        S.world.hallLight.intensity = 3.4 * (1 + Math.sin(S.clock * 0.43) * 0.045);
+      }
 
       // Flickering lanterns
       if (S.world.lanternLights) {
+        const pulse = Math.sin(S.clock * 1.9) * 0.5 + 0.5;
         S.world.lanternLights.forEach((lamp: THREE.PointLight, i: number) => {
-          lamp.intensity = 2.6 * (0.86 + 0.22 * Math.sin(S.clock * (2.3 + i * 0.7) + i * 2.1));
+          lamp.intensity = 2.6 * (0.86 + 0.22 * Math.sin(S.clock * (2.3 + i * 0.7) + i * 2.1) + 0.1 * pulse);
         });
       }
 
-      applyCamera();
+      // Billboard lantern glows to always face camera
+      if (S.world.lanternGlows) {
+        S.world.lanternGlows.forEach((g: THREE.Mesh) => {
+          g.quaternion.copy(camera.quaternion);
+        });
+      }
+
+      // Drifting haze
+      if (S.world.haze) {
+        S.world.haze.forEach((h: THREE.Mesh) => {
+          const ud = h.userData as any;
+          h.position.x = ud.x0 + Math.sin(S.clock * ud.sp + ud.ph) * 5.5;
+          h.quaternion.copy(camera.quaternion);
+        });
+      }
+
       updateLeaves(dt);
+    }
+
+    S.running = true;
+    S.tPrev = performance.now();
+
+    /* The SINGLE render loop. Reads scrollY directly (like the reference).
+       No event-based scroll synchronization — the RAF reads the truth each frame. */
+    function renderFrame(now: number) {
+      if (destroyed) return;
+      const raw = (now - S.tPrev) / 1000 || 0;
+      const dt = Math.min(raw, 0.05);
+      S.tPrev = now;
+      S.clock += dt;
+
+      // Read scroll position directly — no events, no custom events, no indirection.
+      // This is the single source of truth for camera progress.
+      S.rig.prog = progressFor(window.scrollY);
+
+      // Smooth camera interpolation with frame-rate independent damping
+      // Rate 5.2 matches the reference exactly
+      S.rig.smooth = damp(S.rig.smooth, S.rig.prog, 5.2, dt);
+      S.rig.mx = damp(S.rig.mx, S.rig.tmx, 2.6, dt);
+      S.rig.my = damp(S.rig.my, S.rig.tmy, 2.6, dt);
+
+      applyCamera();
+      updateWorld(dt);
 
       renderer.render(scene, camera);
       S.rafId = requestAnimationFrame(renderFrame);
     }
 
     S.rafId = requestAnimationFrame(renderFrame);
-    setIsReady(true);
     if (onLoaded) onLoaded();
 
     return () => {
