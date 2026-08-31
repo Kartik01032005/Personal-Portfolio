@@ -2,12 +2,16 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark";
+export type ThemePreference = Theme;
 
 interface ThemeContextType {
   theme: Theme;
-  toggleTheme?: () => void;
+  preference: ThemePreference;
+  setThemePreference: (preference: ThemePreference) => void;
+  toggleTheme: () => void;
   switchable: boolean;
+  mounted: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -18,40 +22,84 @@ interface ThemeProviderProps {
   switchable?: boolean;
 }
 
+function getStoredPreference(): ThemePreference | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const stored = window.localStorage.getItem("theme");
+    return stored === "dark" || stored === "light" ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "light",
-  switchable = false,
+  switchable = true,
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (switchable && typeof window !== "undefined") {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
-    }
-    return defaultTheme;
-  });
+  const [preference, setPreference] = useState<ThemePreference>(defaultTheme);
+  const [mounted, setMounted] = useState(false);
+  const theme = preference;
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
+    setMounted(true);
+    const stored = getStoredPreference();
+    if (stored) {
+      setPreference(stored);
+      const root = document.documentElement;
+      root.classList.toggle("dark", stored === "dark");
+      root.style.colorScheme = stored;
     }
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    root.style.colorScheme = theme;
 
     if (switchable) {
-      localStorage.setItem("theme", theme);
-    }
-  }, [theme, switchable]);
-
-  const toggleTheme = switchable
-    ? () => {
-        setTheme((prev) => (prev === "light" ? "dark" : "light"));
+      try {
+        window.localStorage.setItem("theme", theme);
+      } catch {
+        // Continue gracefully when storage is unavailable.
       }
-    : undefined;
+    }
+  }, [theme, switchable, mounted]);
+
+  const setThemePreference = (nextPreference: ThemePreference) => {
+    setPreference(nextPreference);
+    const root = document.documentElement;
+    root.classList.toggle("dark", nextPreference === "dark");
+    root.style.colorScheme = nextPreference;
+    try {
+      window.localStorage.setItem("theme", nextPreference);
+    } catch {}
+  };
+
+  const toggleTheme = () => {
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.add("theme-transition");
+    }
+    setPreference((previous) => {
+      const next = previous === "light" ? "dark" : "light";
+      const root = document.documentElement;
+      root.classList.toggle("dark", next === "dark");
+      root.style.colorScheme = next;
+      try {
+        window.localStorage.setItem("theme", next);
+      } catch {}
+      return next;
+    });
+    if (typeof window !== "undefined") {
+      window.setTimeout(() => {
+        document.documentElement.classList.remove("theme-transition");
+      }, 340);
+    }
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, switchable }}>
+    <ThemeContext.Provider value={{ theme, preference, setThemePreference, toggleTheme, switchable, mounted }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -64,3 +112,4 @@ export function useTheme() {
   }
   return context;
 }
+

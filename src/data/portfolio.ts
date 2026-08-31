@@ -310,6 +310,14 @@ export const certifications: Certification[] = [
     category: "Development",
     href: "/certificates/Codsoft.pdf",
   },
+  {
+    name: "Fundamentals of Cloud Computing",
+    issuer: "upGrad",
+    year: "2026",
+    detail: "Certificate of completion for cloud computing fundamentals, issued June 29, 2026.",
+    category: "Cloud Computing",
+    href: "/certificates/cloud%20computing%20.pdf",
+  },
 ];
 
 export const currentFocus: string[] = [

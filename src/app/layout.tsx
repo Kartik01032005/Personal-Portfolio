@@ -59,9 +59,16 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${spaceGrotesk.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => { try { const theme = localStorage.getItem("theme"); const isDark = theme === "dark"; document.documentElement.classList.toggle("dark", isDark); document.documentElement.style.colorScheme = isDark ? "dark" : "light"; } catch {} })();`,
+          }}
+        />
+      </head>
       <body suppressHydrationWarning>
         <ErrorBoundary>
-          <ThemeProvider defaultTheme="light">
+          <ThemeProvider defaultTheme="light" switchable>
             <TooltipProvider>
               <Toaster />
               {children}

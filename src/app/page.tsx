@@ -13,7 +13,9 @@ import {
   Loader2,
   Mail,
   Menu,
+  Moon,
   MoveUpRight,
+  Sun,
   Radio,
   Search,
   Send,
@@ -21,6 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useScrollParallax from "@/hooks/useScrollParallax";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   certifications,
   Certification,
@@ -44,8 +47,8 @@ const reveal = (reduced: boolean | null | undefined, delay = 0) =>
     : {
         initial: { opacity: 0, y: 36, scale: 0.996 },
         whileInView: { opacity: 1, y: 0, scale: 1 },
-        viewport: { once: true, amount: 0.18 },
-        transition: { duration: 0.9, delay, ease: cinematicEasing as any },
+        viewport: { once: true, amount: 0.14, margin: "0px 0px -8% 0px" },
+        transition: { duration: 0.78, delay, ease: cinematicEasing as any },
       };
 
 function SectionLabel({ index, children }: { index: string; children: React.ReactNode }) {
@@ -81,7 +84,8 @@ function ProjectCard({
       className="project-ref-card"
       {...reveal(reduced, index * 0.1)}
       whileHover={reduced ? undefined : { y: -6 }}
-      transition={{ duration: 0.35, ease: cinematicEasing as any }}
+      whileTap={reduced ? undefined : { scale: 0.985 }}
+      transition={{ duration: 0.35, ease: cinematicEasing as any, delay: reduced ? 0 : index * 0.1 }}
     >
       {/* Top: Project Visual */}
       <div
@@ -251,6 +255,7 @@ function CertificationCategoryCard({
 
 export default function Home() {
   const reduced = useReducedMotion();
+  const { theme, toggleTheme, mounted } = useTheme();
   const heroSignalRef = useRef<HTMLDivElement | null>(null);
   const heroOrbitOneRef = useRef<HTMLDivElement | null>(null);
   const heroOrbitTwoRef = useRef<HTMLDivElement | null>(null);
@@ -398,6 +403,7 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+
   useScrollParallax(heroSignalRef, 0.06, !!reduced);
   useScrollParallax(heroOrbitOneRef, 0.035, !!reduced);
   useScrollParallax(heroOrbitTwoRef, 0.05, !!reduced);
@@ -450,15 +456,48 @@ export default function Home() {
             Let’s connect <ArrowUpRight size={14} />
           </a>
         </nav>
-        <button
-          className="menu-toggle"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
-          suppressHydrationWarning
-        >
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <div className="site-nav__controls">
+          <motion.button
+            type="button"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            whileTap={reduced ? undefined : { scale: 0.94 }}
+            aria-label={mounted ? `Switch to ${theme === "dark" ? "light" : "dark"} mode` : "Switch theme"}
+            aria-pressed={mounted ? theme === "dark" : false}
+            title={mounted ? `Switch to ${theme === "dark" ? "light" : "dark"} mode` : "Switch theme"}
+            data-theme={mounted ? theme : "light"}
+            suppressHydrationWarning
+          >
+            <AnimatePresence initial={false} mode="wait">
+              <motion.span
+                key={mounted ? theme : "initial"}
+                initial={reduced ? false : { opacity: 0, x: (mounted && theme === "dark") ? -8 : 8, rotate: (mounted && theme === "dark") ? -35 : 35, scale: 0.7 }}
+                animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
+                exit={reduced ? undefined : { opacity: 0, x: (mounted && theme === "dark") ? 8 : -8, rotate: (mounted && theme === "dark") ? 35 : -35, scale: 0.7 }}
+                transition={{ duration: reduced ? 0 : 0.28, ease: cinematicEasing as any }}
+                aria-hidden="true"
+                suppressHydrationWarning
+              >
+                {mounted && theme === "dark" ? <Moon size={17} /> : <Sun size={17} />}
+              </motion.span>
+            </AnimatePresence>
+            <span className="theme-toggle__label" aria-hidden="true" suppressHydrationWarning>
+              {mounted && theme === "dark" ? "Dark" : "Light"}
+            </span>
+            <span className="sr-only" suppressHydrationWarning>
+              {mounted ? `Current theme: ${theme}. Activate to switch to ${theme === "dark" ? "light" : "dark"} mode.` : "Theme toggle"}
+            </span>
+          </motion.button>
+          <button
+            className="menu-toggle"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+            suppressHydrationWarning
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </header>
 
       <div className="site-signal-rail" aria-hidden="true">
@@ -500,24 +539,32 @@ export default function Home() {
               </a>
             </motion.div>
             <motion.div {...reveal(reduced, 0.36)} className="hero__socials">
-              {socialLinks.map((link: SocialLink) => (
-                <a
+              {socialLinks.map((link: SocialLink, index: number) => (
+                <motion.a
+                  {...reveal(reduced, index * 0.06)}
                   href={link.href}
                   key={link.label}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`${link.label} — ${link.note}`}
                 >
-                  <IconForLink label={link.label} />
-                  {link.label}
-                </a>
+                  <span className="motion-link-content">
+                    <IconForLink label={link.label} />
+                    {link.label}
+                  </span>
+                </motion.a>
               ))}
             </motion.div>
           </div>
           <motion.div {...reveal(reduced, 0.22)} className="hero__diagram" aria-hidden="true">
             <div ref={heroOrbitOneRef} className="hero__orbit hero__orbit--one parallax-layer" />
             <div ref={heroOrbitTwoRef} className="hero__orbit hero__orbit--two parallax-layer" />
-            <div ref={heroSignalRef} className="hero__signal-card parallax-layer">
+            <motion.div
+              ref={heroSignalRef}
+              className="hero__signal-card parallax-layer"
+              whileHover={reduced ? undefined : { y: -7, rotate: 0.8 }}
+              transition={{ duration: 0.45, ease: cinematicEasing as any }}
+            >
               <span className="mono">K / 2026</span>
               <strong>
                 Building useful
@@ -531,7 +578,7 @@ export default function Home() {
                 <i />
               </div>
               <small>full-stack / ai / data</small>
-            </div>
+            </motion.div>
             <div className="hero__node hero__node--a" />
             <div className="hero__node hero__node--b" />
             <div className="hero__node hero__node--c" />
@@ -726,7 +773,7 @@ export default function Home() {
             <motion.div {...reveal(reduced)} className="certifications-heading">
               <p className="eyebrow certifications-kicker">06 / Certifications</p>
               <p className="eyebrow certifications-context">Selected credentials</p>
-              <h2 id="certifications-title">Signals of continued learning.</h2>
+              <h2 id="certifications-title">Signals of <em>continued learning.</em></h2>
               <p>Selected certificates that document the learning behind the work and the systems I continue to build.</p>
             </motion.div>
             <div className="cert-card-grid">
@@ -770,7 +817,13 @@ export default function Home() {
             </motion.div>
             <div className="focus-list">
               {currentFocus.map((item: string, index: number) => (
-                <motion.div key={`${index}-${item}`} {...reveal(reduced, index * 0.04)} className="focus-item">
+                <motion.div
+                  key={`${index}-${item}`}
+                  {...reveal(reduced, index * 0.05)}
+                  whileHover={reduced ? undefined : { x: 6 }}
+                  whileTap={reduced ? undefined : { scale: 0.995 }}
+                  className="focus-item"
+                >
                   <span className="mono">0{index + 1}</span>
                   <span>{item}</span>
               <ArrowUpRight size={16} />
@@ -793,12 +846,14 @@ export default function Home() {
               </h2>
               <p>Have an opportunity, project, or idea? I’d be happy to connect.</p>
               <div className="contact-links">
-                {socialLinks.map((link: SocialLink) => (
-                  <a href={link.href} key={link.label} target="_blank" rel="noopener noreferrer">
-                    <IconForLink label={link.label} />
-                    {link.label}
-                    <ArrowUpRight size={14} />
-                  </a>
+                {socialLinks.map((link: SocialLink, index: number) => (
+                  <motion.a {...reveal(reduced, index * 0.05)} href={link.href} key={link.label} target="_blank" rel="noopener noreferrer">
+                    <span className="motion-link-content">
+                      <IconForLink label={link.label} />
+                      {link.label}
+                      <ArrowUpRight size={14} />
+                    </span>
+                  </motion.a>
                 ))}
               </div>
             </motion.div>
@@ -929,8 +984,21 @@ export default function Home() {
         </a>
       </footer>
 
-      {selectedProject && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setSelectedProject(null)}>
+      <AnimatePresence>
+        {selectedProject && (
+        <motion.div
+          {...(reduced
+            ? {}
+            : {
+                initial: { opacity: 0 },
+                animate: { opacity: 1 },
+                exit: { opacity: 0 },
+                transition: { duration: 0.28, ease: cinematicEasing as any },
+              })}
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => setSelectedProject(null)}
+        >
           <motion.div
             {...(reduced
               ? {}
@@ -996,8 +1064,9 @@ export default function Home() {
               ))}
             </div>
           </motion.div>
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
