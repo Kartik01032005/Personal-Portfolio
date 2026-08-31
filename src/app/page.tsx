@@ -25,6 +25,8 @@ import { Button } from "@/components/ui/button";
 import useScrollParallax from "@/hooks/useScrollParallax";
 import { useTheme } from "@/contexts/ThemeContext";
 import SmoothScroll from "@/components/SmoothScroll";
+import IntroLoader from "@/components/IntroLoader";
+import ScrollSection from "@/components/ScrollSection";
 import {
   certifications,
   Certification,
@@ -46,10 +48,10 @@ const reveal = (reduced: boolean | null | undefined, delay = 0) =>
   reduced
     ? {}
     : {
-        initial: { opacity: 0, y: 36, scale: 0.996 },
+        initial: { opacity: 0, y: 28, scale: 0.992 },
         whileInView: { opacity: 1, y: 0, scale: 1 },
-        viewport: { once: true, amount: 0.14, margin: "0px 0px -8% 0px" },
-        transition: { duration: 0.78, delay, ease: cinematicEasing as any },
+        viewport: { once: false, amount: 0.1, margin: "0px 0px -6% 0px" },
+        transition: { duration: 0.72, delay, ease: cinematicEasing as any },
       };
 
 function SectionLabel({ index, children }: { index: string; children: React.ReactNode }) {
@@ -293,6 +295,7 @@ export default function Home() {
   const [activeSkillCategory, setActiveSkillCategory] = useState("All skills");
   const [openCertificationCategory, setOpenCertificationCategory] = useState<string | null>(null);
   const [showAllCertificates, setShowAllCertificates] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
 
   const handleSubmitContact = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -452,6 +455,7 @@ export default function Home() {
 
   return (
     <div className="site-shell" suppressHydrationWarning>
+      {showIntro && <IntroLoader onComplete={() => setShowIntro(false)} />}
       <SmoothScroll />
       <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
         <a
@@ -596,7 +600,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="about" className="section-shell section-shell--light about-section" aria-labelledby="about-title">
+        <ScrollSection id="about" className="section-shell section-shell--light about-section" aria-labelledby="about-title">
           <div className="section-rail">
             <SectionLabel index="01">About</SectionLabel>
             <p className="rail-note">A practical builder<br />with a wide lens.</p>
@@ -642,9 +646,9 @@ export default function Home() {
               </motion.div>
             </div>
           </div>
-        </section>
+        </ScrollSection>
 
-        <section id="education" className="section-shell section-shell--light" aria-labelledby="education-title">
+        <ScrollSection id="education" className="section-shell section-shell--light" aria-labelledby="education-title">
           <div className="section-rail">
             <SectionLabel index="02">Education</SectionLabel>
             <p className="rail-note">
@@ -670,9 +674,9 @@ export default function Home() {
               </div>
             </motion.div>
           </div>
-        </section>
+        </ScrollSection>
 
-        <section id="skills" className="section-shell section-shell--dark arsenal-section" aria-labelledby="skills-title">
+        <ScrollSection id="skills" className="section-shell section-shell--dark arsenal-section" aria-labelledby="skills-title">
           <div className="section-rail">
             <SectionLabel index="03">Technical arsenal</SectionLabel>
             <p className="rail-note">Tools chosen for<br />the work at hand.</p>
@@ -705,9 +709,9 @@ export default function Home() {
             </motion.div>
             {visibleSkills.length === 0 && <motion.div {...reveal(reduced)} className="arsenal-empty"><span className="mono">No match / 00</span><h3>Nothing in the current set.</h3><p>Try a different search term or return to all skills.</p><button type="button" onClick={() => { setSkillQuery(""); setActiveSkillCategory("All skills"); }} suppressHydrationWarning>Reset filters <ArrowUpRight size={14} /></button></motion.div>}
           </div>
-        </section>
+        </ScrollSection>
 
-        <section id="projects" className="section-shell section-shell--light projects-section" aria-labelledby="projects-title">
+        <ScrollSection id="projects" className="section-shell section-shell--light projects-section" aria-labelledby="projects-title">
           <div className="section-rail">
             <SectionLabel index="04">projects</SectionLabel>
             <p className="rail-note">
@@ -732,9 +736,9 @@ export default function Home() {
             </div>
 
           </div>
-        </section>
+        </ScrollSection>
 
-        <section id="experience" className="section-shell section-shell--dark" aria-labelledby="experience-title">
+        <ScrollSection id="experience" className="section-shell section-shell--dark" aria-labelledby="experience-title">
           <div className="section-rail">
             <SectionLabel index="05">Experience</SectionLabel>
             <p className="rail-note">
@@ -772,9 +776,9 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </section>
+        </ScrollSection>
 
-        <section id="certifications" className="section-shell section-shell--light certifications-section" aria-labelledby="certifications-title">
+        <ScrollSection id="certifications" className="section-shell section-shell--light certifications-section" aria-labelledby="certifications-title">
           <div className="section-rail">
             <SectionLabel index="06">Certifications</SectionLabel>
             <p className="rail-note">Proof of active<br />learning.</p>
@@ -850,9 +854,9 @@ export default function Home() {
               </div>
             )}
           </div>
-        </section>
+        </ScrollSection>
 
-        <section className="section-shell section-shell--warm" aria-labelledby="focus-title">
+        <ScrollSection className="section-shell section-shell--warm" aria-labelledby="focus-title">
           <div className="section-rail">
             <SectionLabel index="07">Current focus</SectionLabel>
             <p className="rail-note">
@@ -886,9 +890,9 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </section>
+        </ScrollSection>
 
-        <section id="contact" className="section-shell section-shell--contact" aria-labelledby="contact-title">
+        <ScrollSection id="contact" className="section-shell section-shell--contact" aria-labelledby="contact-title">
           <div className="contact-glow" aria-hidden="true" />
           <div className="section-rail contact-rail">
             <SectionLabel index="08">Contact</SectionLabel>
@@ -1019,7 +1023,7 @@ export default function Home() {
               )}
             </motion.form>
           </div>
-        </section>
+        </ScrollSection>
       </main>
 
       <footer className="site-footer">

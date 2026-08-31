@@ -1,4 +1,4 @@
-/* Style reminder: Signal / Structure — contemporary editorial brutalism softened by Swiss information design. Deep graphite, slate, and signal orange. */
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Caveat:wght@600;700&family=Great+Vibes&family=MonteCarlo&family=Parisienne&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -1534,4 +1534,49 @@ html.dark ::selection {
     transform: none !important;
   }
 }
+
+/* ============================================================ 
+   CINEMATIC INTRO LOADER ANIMATION
+   ============================================================ */
+.intro-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000 !important;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: all;
+}
+
+.intro-loader__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.intro-loader__video-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(92vw, 580px);
+  max-width: 580px;
+  background: #000000;
+}
+
+.intro-loader__video {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  background: #000000;
+  filter: contrast(1.2) brightness(1.1);
+}
+
 
