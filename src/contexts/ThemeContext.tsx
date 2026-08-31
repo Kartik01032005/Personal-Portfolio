@@ -78,24 +78,7 @@ export function ThemeProvider({
   };
 
   const toggleTheme = () => {
-    if (typeof document !== "undefined") {
-      document.documentElement.classList.add("theme-transition");
-    }
-    setPreference((previous) => {
-      const next = previous === "light" ? "dark" : "light";
-      const root = document.documentElement;
-      root.classList.toggle("dark", next === "dark");
-      root.style.colorScheme = next;
-      try {
-        window.localStorage.setItem("theme", next);
-      } catch {}
-      return next;
-    });
-    if (typeof window !== "undefined") {
-      window.setTimeout(() => {
-        document.documentElement.classList.remove("theme-transition");
-      }, 340);
-    }
+    setThemePreference(theme === "light" ? "dark" : "light");
   };
 
   return (

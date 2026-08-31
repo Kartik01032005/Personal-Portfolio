@@ -19,8 +19,19 @@ class ErrorBoundary extends Component<Props, State> {
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: unknown): State {
+    let err: Error;
+    if (error instanceof Error) {
+      err = error;
+    } else if (typeof error === "string") {
+      err = new Error(error);
+    } else if (error && typeof error === "object") {
+      const msg = (error as any).message || (error as any).type || (error as any).reason || "An unexpected error occurred.";
+      err = new Error(String(msg));
+    } else {
+      err = new Error("An unexpected error occurred.");
+    }
+    return { hasError: true, error: err };
   }
 
   render() {

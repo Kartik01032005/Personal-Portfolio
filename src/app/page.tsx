@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import useScrollParallax from "@/hooks/useScrollParallax";
 import { useTheme } from "@/contexts/ThemeContext";
+import SmoothScroll from "@/components/SmoothScroll";
 import {
   certifications,
   Certification,
@@ -174,19 +175,6 @@ function ProjectCard({
 type ArsenalSkill = {
   name: string;
   category: string;
-  description: string;
-  level: string;
-  tags: string[];
-};
-
-const skillNotes: Record<string, { description: string; level: string; tags: string[] }> = {
-  TypeScript: { description: "Typed interfaces for dependable product work.", level: "Advanced", tags: ["typed", "frontend"] },
-  JavaScript: { description: "Flexible language for interactive web experiences.", level: "Advanced", tags: ["web", "runtime"] },
-  Python: { description: "Practical scripting and analysis for intelligent systems.", level: "Working", tags: ["data", "automation"] },
-  React: { description: "Component architecture for expressive interfaces.", level: "Advanced", tags: ["ui", "components"] },
-  "Node.js": { description: "Server-side JavaScript for connected applications.", level: "Applied", tags: ["backend", "runtime"] },
-  "Framer Motion": { description: "Motion primitives for responsive, intentional interaction.", level: "Applied", tags: ["motion", "interaction"] },
-  "OpenAI API": { description: "Model integration for useful intelligent features.", level: "Applied", tags: ["ai", "api"] },
 };
 
 function SkillCard({ skill, reduced }: { skill: ArsenalSkill; reduced: boolean | null | undefined }) {
@@ -199,15 +187,9 @@ function SkillCard({ skill, reduced }: { skill: ArsenalSkill; reduced: boolean |
       transition={{ duration: reduced ? 0 : 0.42, ease: cinematicEasing as any }}
       className="arsenal-card"
       tabIndex={0}
-      aria-label={`${skill.name}, ${skill.level}`}
+      aria-label={skill.name}
     >
-      <div className="arsenal-card__top">
-        <span className="eyebrow">{skill.category}</span>
-        <span className="arsenal-card__level"><i />{skill.level}</span>
-      </div>
       <h3>{skill.name}</h3>
-      <p>{skill.description}</p>
-      <div className="tag-row">{skill.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
     </motion.article>
   );
 }
@@ -253,9 +235,49 @@ function CertificationCategoryCard({
   );
 }
 
+function ThemeToggle({ reduced }: { reduced: boolean | null }) {
+  const { theme, toggleTheme, mounted } = useTheme();
+
+  return (
+    <motion.div
+      className="theme-toggle"
+      whileTap={reduced ? undefined : { scale: 0.94 }}
+      data-theme={mounted ? theme : "light"}
+      role="radiogroup"
+      aria-label="Theme selector"
+      suppressHydrationWarning
+    >
+      <button
+        type="button"
+        className={`theme-toggle__option${mounted && theme === "light" ? " is-active" : ""}`}
+        onClick={() => { if (mounted && theme !== "light") toggleTheme(); }}
+        aria-label="Switch to light mode"
+        aria-checked={mounted ? theme === "light" : true}
+        role="radio"
+        suppressHydrationWarning
+      >
+        <Sun size={15} />
+      </button>
+      <button
+        type="button"
+        className={`theme-toggle__option${mounted && theme === "dark" ? " is-active" : ""}`}
+        onClick={() => { if (mounted && theme !== "dark") toggleTheme(); }}
+        aria-label="Switch to dark mode"
+        aria-checked={mounted ? theme === "dark" : false}
+        role="radio"
+        suppressHydrationWarning
+      >
+        <Moon size={15} />
+      </button>
+      <span className="sr-only" suppressHydrationWarning>
+        {mounted ? `Current theme: ${theme}. Click the other icon to switch.` : "Theme toggle"}
+      </span>
+    </motion.div>
+  );
+}
+
 export default function Home() {
   const reduced = useReducedMotion();
-  const { theme, toggleTheme, mounted } = useTheme();
   const heroSignalRef = useRef<HTMLDivElement | null>(null);
   const heroOrbitOneRef = useRef<HTMLDivElement | null>(null);
   const heroOrbitTwoRef = useRef<HTMLDivElement | null>(null);
@@ -270,6 +292,7 @@ export default function Home() {
   const [skillQuery, setSkillQuery] = useState("");
   const [activeSkillCategory, setActiveSkillCategory] = useState("All skills");
   const [openCertificationCategory, setOpenCertificationCategory] = useState<string | null>(null);
+  const [showAllCertificates, setShowAllCertificates] = useState(false);
 
   const handleSubmitContact = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -339,14 +362,10 @@ export default function Home() {
   };
 
     const arsenalSkills = useMemo<ArsenalSkill[]>(
-    () => skillGroups.flatMap((group) => group.items.map((name) => {
-      const note = skillNotes[name] ?? {
-        description: `A practical part of the ${group.label.toLowerCase()} toolkit.`,
-        level: "Working",
-        tags: [group.label.split(" ")[0].toLowerCase(), "practice"],
-      };
-      return { name, category: group.label, ...note };
-    })),
+      () => skillGroups.flatMap((group) => group.items.map((name) => ({
+        name,
+        category: group.label,
+      }))),
     []
   );
   const skillCategories = useMemo(() => ["All skills", ...skillGroups.filter((group) => group.items.length > 0).map((group) => group.label)], []);
@@ -354,7 +373,7 @@ export default function Home() {
     const query = skillQuery.trim().toLowerCase();
     return arsenalSkills.filter((skill) => {
       const matchesCategory = activeSkillCategory === "All skills" || skill.category === activeSkillCategory;
-      const searchable = [skill.name, skill.category, skill.description, ...skill.tags].join(" ").toLowerCase();
+      const searchable = [skill.name, skill.category].join(" ").toLowerCase();
       return matchesCategory && (!query || searchable.includes(query));
     });
   }, [activeSkillCategory, arsenalSkills, skillQuery]);
@@ -409,13 +428,31 @@ export default function Home() {
   useScrollParallax(heroOrbitTwoRef, 0.05, !!reduced);
 
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (selectedProject) {
+      window.__lenis?.stop();
+    } else {
+      window.__lenis?.start();
+    }
+  }, [selectedProject]);
+
   const jumpTo = (href: string) => {
     setMenuOpen(false);
-    document.querySelector(href)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+    if (typeof window !== "undefined" && window.__lenis && !reduced) {
+      window.__lenis.scrollTo(href, {
+        offset: 0,
+        duration: 1.2,
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      });
+    } else {
+      document.querySelector(href)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+    }
   };
 
   return (
     <div className="site-shell" suppressHydrationWarning>
+      <SmoothScroll />
       <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
         <a
           href="#top"
@@ -457,40 +494,7 @@ export default function Home() {
           </a>
         </nav>
         <div className="site-nav__controls">
-          <motion.div
-            className="theme-toggle"
-            whileTap={reduced ? undefined : { scale: 0.94 }}
-            data-theme={mounted ? theme : "light"}
-            role="radiogroup"
-            aria-label="Theme selector"
-            suppressHydrationWarning
-          >
-            <button
-              type="button"
-              className={`theme-toggle__option${mounted && theme === "light" ? " is-active" : ""}`}
-              onClick={() => { if (mounted && theme !== "light") toggleTheme(); }}
-              aria-label="Switch to light mode"
-              aria-checked={mounted ? theme === "light" : true}
-              role="radio"
-              suppressHydrationWarning
-            >
-              <Sun size={15} />
-            </button>
-            <button
-              type="button"
-              className={`theme-toggle__option${mounted && theme === "dark" ? " is-active" : ""}`}
-              onClick={() => { if (mounted && theme !== "dark") toggleTheme(); }}
-              aria-label="Switch to dark mode"
-              aria-checked={mounted ? theme === "dark" : false}
-              role="radio"
-              suppressHydrationWarning
-            >
-              <Moon size={15} />
-            </button>
-            <span className="sr-only" suppressHydrationWarning>
-              {mounted ? `Current theme: ${theme}. Click the other icon to switch.` : "Theme toggle"}
-            </span>
-          </motion.div>
+          <ThemeToggle reduced={reduced} />
           <button
             className="menu-toggle"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -603,11 +607,14 @@ export default function Home() {
               <h2 id="about-title">About Me<span>.</span></h2>
             </motion.div>
             <div className="about-layout">
-              <motion.div {...reveal(reduced, 0.08)} className="about-portrait" aria-label="Profile photo placeholder">
-                <div className="about-portrait__inner">
-                  <span className="mono">Profile photo</span>
-                  <small>Add your portrait at /public/profile.jpg</small>
-                </div>
+              <motion.div {...reveal(reduced, 0.08)} className="about-portrait">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/profile.jpg"
+                  alt="Kartik Manjunath Nilekani"
+                  className="about-portrait__img"
+                  loading="lazy"
+                />
               </motion.div>
               <motion.div {...reveal(reduced, 0.16)} className="about-copy">
                 <p className="lede">
@@ -690,7 +697,7 @@ export default function Home() {
                 ))}
               </div>
             </motion.div>
-            <div className="arsenal-meta"><span><b>{visibleSkills.length.toString().padStart(2, "0")}</b> displayed / {arsenalSkills.length.toString().padStart(2, "0")} total skills</span><span>Use search or filter to inspect the working set <ArrowDownRight size={14} /></span></div>
+            <div className="arsenal-meta"><span><b>{visibleSkills.length.toString().padStart(2, "0")}</b> displayed / {arsenalSkills.length.toString().padStart(2, "0")} total skills</span></div>
             <motion.div layout className="arsenal-grid" aria-live="polite">
               <AnimatePresence mode="popLayout" initial={!reduced}>
                 {visibleSkills.map((skill, index) => <SkillCard key={skill.name} skill={skill} reduced={reduced} />)}
@@ -780,7 +787,7 @@ export default function Home() {
               <p>Selected certificates that document the learning behind the work and the systems I continue to build.</p>
             </motion.div>
             <div className="cert-card-grid">
-              {certifications.map((cert: Certification, index: number) => (
+              {certifications.slice(0, 4).map((cert: Certification, index: number) => (
                 <motion.article key={cert.name} {...reveal(reduced, index * 0.05)} className="cert-card">
                   <div className="cert-card__header">
                     {cert.category && <span className="cert-card__category">{cert.category}</span>}
@@ -796,7 +803,52 @@ export default function Home() {
                   </a>
                 </motion.article>
               ))}
+              <AnimatePresence>
+                {showAllCertificates &&
+                  certifications.slice(4).map((cert: Certification, index: number) => (
+                    <motion.article
+                      key={cert.name}
+                      initial={reduced ? { opacity: 1 } : { opacity: 0, y: 16, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.98 }}
+                      transition={{ duration: 0.32, delay: index * 0.05, ease: cinematicEasing as any }}
+                      className="cert-card"
+                    >
+                      <div className="cert-card__header">
+                        {cert.category && <span className="cert-card__category">{cert.category}</span>}
+                        <span className="cert-card__year mono">{cert.year}</span>
+                      </div>
+                      <div className="cert-card__body">
+                        <h4>{cert.name}</h4>
+                        <p>{cert.issuer}</p>
+                        <small>{cert.detail}</small>
+                      </div>
+                      <a className="cert-card__action" href={cert.href} target="_blank" rel="noopener noreferrer" aria-label={`View certificate for ${cert.name}`}>
+                        View Certificate <ArrowUpRight size={14} />
+                      </a>
+                    </motion.article>
+                  ))}
+              </AnimatePresence>
             </div>
+            {certifications.length > 4 && (
+              <div className="cert-expand-wrap">
+                <Button
+                  className="button button--primary"
+                  onClick={() => setShowAllCertificates(!showAllCertificates)}
+                  aria-expanded={showAllCertificates}
+                >
+                  {showAllCertificates ? (
+                    <>
+                      Show fewer certificates <ArrowUpRight size={16} />
+                    </>
+                  ) : (
+                    <>
+                      View more certificates <ArrowDownRight size={16} />
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -963,9 +1015,6 @@ export default function Home() {
                       </>
                     )}
                   </button>
-                  <p className="form-note">
-                    <Radio size={13} /> {isSubmitting ? "Delivering message to inbox..." : "Direct email delivery via Resend"}
-                  </p>
                 </>
               )}
             </motion.form>
@@ -999,6 +1048,7 @@ export default function Home() {
                 transition: { duration: 0.28, ease: cinematicEasing as any },
               })}
           className="modal-backdrop"
+          data-lenis-prevent
           role="presentation"
           onClick={() => setSelectedProject(null)}
         >
@@ -1011,6 +1061,7 @@ export default function Home() {
                   transition: { duration: 0.35 },
                 })}
             className="case-modal"
+            data-lenis-prevent
             role="dialog"
             aria-modal="true"
             aria-labelledby="case-title"

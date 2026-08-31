@@ -248,7 +248,7 @@ export const skillGroups: SkillGroup[] = [
 
 export const verifiedTimeline: TimelineItem[] = [
   {
-    date: "2024 — Present",
+    date: "2026 — Present",
     title: "Full-Stack Developer & Technical Lead",
     org: "Srinivas Institute of Technology Student Projects",
     description:
@@ -262,7 +262,7 @@ export const verifiedTimeline: TimelineItem[] = [
       "Handle event photography and create promotional posters and visual content for club events.",
   },
   {
-    date: "2023 — 2024",
+    date: "2023 — 2027",
     title: "Computer Science & Business Systems Scholar",
     org: "Srinivas Institute of Technology",
     description:
@@ -295,11 +295,11 @@ export const certifications: Certification[] = [
     href: "/certificates/CCNAENSAUpdate20260808-22-ns4iwb%20(1).pdf",
   },
   {
-    name: "Course Certificate",
-    issuer: "Professional Learning Program",
-    year: "2025",
-    detail: "Completion certificate for a structured technology and development learning course.",
-    category: "Technology",
+    name: "MERN Full Stack Development",
+    issuer: "EduSkills Academy",
+    year: "2026",
+    detail: "8-week internship program covering React, Node.js, Express, MongoDB, RESTful APIs, JWT Auth, and full-stack project deployment.",
+    category: "Full-Stack Development",
     href: "/certificates/Course_Certificate_1454085.pdf",
   },
   {
