@@ -457,37 +457,40 @@ export default function Home() {
           </a>
         </nav>
         <div className="site-nav__controls">
-          <motion.button
-            type="button"
+          <motion.div
             className="theme-toggle"
-            onClick={toggleTheme}
             whileTap={reduced ? undefined : { scale: 0.94 }}
-            aria-label={mounted ? `Switch to ${theme === "dark" ? "light" : "dark"} mode` : "Switch theme"}
-            aria-pressed={mounted ? theme === "dark" : false}
-            title={mounted ? `Switch to ${theme === "dark" ? "light" : "dark"} mode` : "Switch theme"}
             data-theme={mounted ? theme : "light"}
+            role="radiogroup"
+            aria-label="Theme selector"
             suppressHydrationWarning
           >
-            <AnimatePresence initial={false} mode="wait">
-              <motion.span
-                key={mounted ? theme : "initial"}
-                initial={reduced ? false : { opacity: 0, x: (mounted && theme === "dark") ? -8 : 8, rotate: (mounted && theme === "dark") ? -35 : 35, scale: 0.7 }}
-                animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
-                exit={reduced ? undefined : { opacity: 0, x: (mounted && theme === "dark") ? 8 : -8, rotate: (mounted && theme === "dark") ? 35 : -35, scale: 0.7 }}
-                transition={{ duration: reduced ? 0 : 0.28, ease: cinematicEasing as any }}
-                aria-hidden="true"
-                suppressHydrationWarning
-              >
-                {mounted && theme === "dark" ? <Moon size={17} /> : <Sun size={17} />}
-              </motion.span>
-            </AnimatePresence>
-            <span className="theme-toggle__label" aria-hidden="true" suppressHydrationWarning>
-              {mounted && theme === "dark" ? "Dark" : "Light"}
-            </span>
+            <button
+              type="button"
+              className={`theme-toggle__option${mounted && theme === "light" ? " is-active" : ""}`}
+              onClick={() => { if (mounted && theme !== "light") toggleTheme(); }}
+              aria-label="Switch to light mode"
+              aria-checked={mounted ? theme === "light" : true}
+              role="radio"
+              suppressHydrationWarning
+            >
+              <Sun size={15} />
+            </button>
+            <button
+              type="button"
+              className={`theme-toggle__option${mounted && theme === "dark" ? " is-active" : ""}`}
+              onClick={() => { if (mounted && theme !== "dark") toggleTheme(); }}
+              aria-label="Switch to dark mode"
+              aria-checked={mounted ? theme === "dark" : false}
+              role="radio"
+              suppressHydrationWarning
+            >
+              <Moon size={15} />
+            </button>
             <span className="sr-only" suppressHydrationWarning>
-              {mounted ? `Current theme: ${theme}. Activate to switch to ${theme === "dark" ? "light" : "dark"} mode.` : "Theme toggle"}
+              {mounted ? `Current theme: ${theme}. Click the other icon to switch.` : "Theme toggle"}
             </span>
-          </motion.button>
+          </motion.div>
           <button
             className="menu-toggle"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -669,7 +672,7 @@ export default function Home() {
           </div>
           <div className="skills-content">
             <motion.div {...reveal(reduced)} className="section-heading arsenal-heading">
-              <p className="eyebrow arsenal-kicker">03 / Skills</p>
+              <p className="eyebrow arsenal-kicker"><span style={{ color: '#f47c48' }}>03 /</span> Skills</p>
               <h2 id="skills-title">A disciplined<br /><em>technical arsenal.</em></h2>
             </motion.div>
             <motion.div {...reveal(reduced, 0.08)} className="arsenal-controls" aria-label="Skill search and filters">
@@ -771,7 +774,7 @@ export default function Home() {
           </div>
           <div className="certifications-main">
             <motion.div {...reveal(reduced)} className="certifications-heading">
-              <p className="eyebrow certifications-kicker">06 / Certifications</p>
+              <p className="eyebrow certifications-kicker"><span style={{ color: '#f47c48' }}>06 /</span> Certifications</p>
               <p className="eyebrow certifications-context">Selected credentials</p>
               <h2 id="certifications-title">Signals of <em>continued learning.</em></h2>
               <p>Selected certificates that document the learning behind the work and the systems I continue to build.</p>
