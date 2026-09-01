@@ -27,8 +27,13 @@ import { useTheme } from "@/contexts/ThemeContext";
 import SmoothScroll from "@/components/SmoothScroll";
 import IntroLoader from "@/components/IntroLoader";
 import ScrollSection from "@/components/ScrollSection";
+import { AboutSection } from "@/components/portfolio/AboutSection";
+import { EducationSection } from "@/components/portfolio/EducationSection";
+import { CurrentFocusSection } from "@/components/portfolio/CurrentFocusSection";
+import { SideNavigation } from "@/components/portfolio/SideNavigation";
 import { ProjectsSection } from "@/components/portfolio/ProjectsSection";
 import { ExperienceSection } from "@/components/portfolio/ExperienceSection";
+import { CertificationsSection } from "@/components/portfolio/CertificationsSection";
 import {
   certifications,
   Certification,
@@ -399,16 +404,8 @@ export default function Home() {
           </a>
         </nav>
         <div className="site-nav__controls">
+          <SideNavigation activeSection={activeSection} jumpTo={jumpTo} />
           <ThemeToggle reduced={reduced} />
-          <button
-            className="menu-toggle"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
-            suppressHydrationWarning
-          >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
         </div>
       </header>
 
@@ -500,81 +497,9 @@ export default function Home() {
           </div>
         </section>
 
-        <ScrollSection id="about" className="section-shell section-shell--light about-section" aria-labelledby="about-title">
-          <div className="section-rail">
-            <SectionLabel index="01">About</SectionLabel>
-            <p className="rail-note">A practical builder<br />with a wide lens.</p>
-          </div>
-          <div className="about-main">
-            <motion.div {...reveal(reduced)} className="about-section-heading">
-              <p className="eyebrow">Profile / foundation</p>
-              <h2 id="about-title">About Me<span>.</span></h2>
-            </motion.div>
-            <div className="about-layout">
-              <motion.div {...reveal(reduced, 0.08)} className="about-portrait">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/profile.jpg"
-                  alt="Kartik Manjunath Nilekani"
-                  className="about-portrait__img"
-                  loading="lazy"
-                />
-              </motion.div>
-              <motion.div {...reveal(reduced, 0.16)} className="about-copy">
-                <p className="lede">
-                  I&apos;m Kartik Manjunath Nilekani — a Computer Science and Business Systems engineering student passionate about building practical solutions at the intersection of software, data analytics, finance, and AI. I enjoy transforming ideas into meaningful digital products and exploring how technology can solve real-world problems.
-                </p>
-                <p>
-                  I work with modern web technologies and AI tools, continuously expanding my skills through hands-on projects, internships, hackathons, and experimentation. My goal is to combine technical thinking with business and analytical perspectives to build solutions that are useful, practical, and impactful.
-                </p>
-                <div className="about-meta">
-                  <span><b>01</b> Srinivas Institute of Technology</span>
-                  <span><b>02</b> 2023—2027 / Mangalore</span>
-                </div>
-                <div className="about-actions">
-                  <a
-                    className="button button--primary"
-                    href="/resume.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download="Kartik-Manjunath-Nilekani-Resume.pdf"
-                  >
-                    Download Resume <ArrowUpRight size={16} />
-                  </a>
-                  <button className="button button--outline" type="button" onClick={() => jumpTo("#experience")} suppressHydrationWarning>Learn more about me <ArrowDownRight size={16} /></button>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </ScrollSection>
+        <AboutSection SectionLabel={SectionLabel} jumpTo={jumpTo} />
 
-        <ScrollSection id="education" className="section-shell section-shell--light" aria-labelledby="education-title">
-          <div className="section-rail">
-            <SectionLabel index="02">Education</SectionLabel>
-            <p className="rail-note">
-              Foundations for
-              <br />
-              the next build.
-            </p>
-          </div>
-          <div className="education-content">
-            <motion.div {...reveal(reduced)} className="education-card">
-              <div>
-                <p className="eyebrow">Current foundation</p>
-                <h2 id="education-title">
-                  B.E. — Computer Science
-                  <br />& Business Systems
-                </h2>
-                <p>Srinivas Institute of Technology</p>
-              </div>
-              <div className="education-card__year mono">
-                2023—2027
-                <br />
-                <span>Mangalore, India</span>
-              </div>
-            </motion.div>
-          </div>
-        </ScrollSection>
+        <EducationSection SectionLabel={SectionLabel} />
 
         <ScrollSection id="skills" className="section-shell section-shell--dark arsenal-section" aria-labelledby="skills-title">
           <div className="section-rail">
@@ -601,7 +526,11 @@ export default function Home() {
                 ))}
               </div>
             </motion.div>
-            <div className="arsenal-meta"><span><b>{visibleSkills.length.toString().padStart(2, "0")}</b> displayed / {arsenalSkills.length.toString().padStart(2, "0")} total skills</span></div>
+            <div className="arsenal-meta">
+              <span>
+                <b>{visibleSkills.length.toString().padStart(2, "0")}</b> DISPLAYED / <b>{arsenalSkills.length.toString().padStart(2, "0")}</b> TOTAL <b>SKILLS</b>
+              </span>
+            </div>
             <motion.div layout className="arsenal-grid" aria-live="polite">
               <AnimatePresence mode="popLayout" initial={!reduced}>
                 {visibleSkills.map((skill, index) => <SkillCard key={skill.name} skill={skill} reduced={reduced} />)}
@@ -615,119 +544,9 @@ export default function Home() {
 
         <ExperienceSection />
 
-        <ScrollSection id="certifications" className="section-shell section-shell--light certifications-section" aria-labelledby="certifications-title">
-          <div className="section-rail">
-            <SectionLabel index="06">Certifications</SectionLabel>
-            <p className="rail-note">Proof of active<br />learning.</p>
-          </div>
-          <div className="certifications-main">
-            <motion.div {...reveal(reduced)} className="certifications-heading">
-              <p className="eyebrow certifications-kicker"><span style={{ color: '#f47c48' }}>06 /</span> Certifications</p>
-              <p className="eyebrow certifications-context">Selected credentials</p>
-              <h2 id="certifications-title">Signals of <em>continued learning.</em></h2>
-              <p>Selected certificates that document the learning behind the work and the systems I continue to build.</p>
-            </motion.div>
-            <div className="cert-card-grid">
-              {certifications.slice(0, 4).map((cert: Certification, index: number) => (
-                <motion.article key={cert.name} {...reveal(reduced, index * 0.05)} className="cert-card">
-                  <div className="cert-card__header">
-                    {cert.category && <span className="cert-card__category">{cert.category}</span>}
-                    <span className="cert-card__year mono">{cert.year}</span>
-                  </div>
-                  <div className="cert-card__body">
-                    <h4>{cert.name}</h4>
-                    <p>{cert.issuer}</p>
-                    <small>{cert.detail}</small>
-                  </div>
-                  <a className="cert-card__action" href={cert.href} target="_blank" rel="noopener noreferrer" aria-label={`View certificate for ${cert.name}`}>
-                    View Certificate <ArrowUpRight size={14} />
-                  </a>
-                </motion.article>
-              ))}
-              <AnimatePresence>
-                {showAllCertificates &&
-                  certifications.slice(4).map((cert: Certification, index: number) => (
-                    <motion.article
-                      key={cert.name}
-                      initial={reduced ? { opacity: 1 } : { opacity: 0, y: 16, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.98 }}
-                      transition={{ duration: 0.32, delay: index * 0.05, ease: cinematicEasing as any }}
-                      className="cert-card"
-                    >
-                      <div className="cert-card__header">
-                        {cert.category && <span className="cert-card__category">{cert.category}</span>}
-                        <span className="cert-card__year mono">{cert.year}</span>
-                      </div>
-                      <div className="cert-card__body">
-                        <h4>{cert.name}</h4>
-                        <p>{cert.issuer}</p>
-                        <small>{cert.detail}</small>
-                      </div>
-                      <a className="cert-card__action" href={cert.href} target="_blank" rel="noopener noreferrer" aria-label={`View certificate for ${cert.name}`}>
-                        View Certificate <ArrowUpRight size={14} />
-                      </a>
-                    </motion.article>
-                  ))}
-              </AnimatePresence>
-            </div>
-            {certifications.length > 4 && (
-              <div className="cert-expand-wrap">
-                <Button
-                  className="button button--primary"
-                  onClick={() => setShowAllCertificates(!showAllCertificates)}
-                  aria-expanded={showAllCertificates}
-                >
-                  {showAllCertificates ? (
-                    <>
-                      Show fewer certificates <ArrowUpRight size={16} />
-                    </>
-                  ) : (
-                    <>
-                      View more certificates <ArrowDownRight size={16} />
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-          </div>
-        </ScrollSection>
+        <CertificationsSection />
 
-        <ScrollSection className="section-shell section-shell--warm" aria-labelledby="focus-title">
-          <div className="section-rail">
-            <SectionLabel index="07">Current focus</SectionLabel>
-            <p className="rail-note">
-              A roadmap with
-              <br />
-              room to change.
-            </p>
-          </div>
-          <div className="focus-content">
-            <motion.div {...reveal(reduced)} className="section-heading">
-              <p className="eyebrow">Currently building & learning</p>
-              <h2 id="focus-title">
-                Curious enough
-                <br />
-                to keep <em>going.</em>
-              </h2>
-            </motion.div>
-            <div className="focus-list">
-              {currentFocus.map((item: string, index: number) => (
-                <motion.div
-                  key={`${index}-${item}`}
-                  {...reveal(reduced, index * 0.05)}
-                  whileHover={reduced ? undefined : { x: 6 }}
-                  whileTap={reduced ? undefined : { scale: 0.995 }}
-                  className="focus-item"
-                >
-                  <span className="mono">0{index + 1}</span>
-                  <span>{item}</span>
-              <ArrowUpRight size={16} />
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </ScrollSection>
+        <CurrentFocusSection SectionLabel={SectionLabel} />
 
         <ScrollSection id="contact" className="section-shell section-shell--contact" aria-labelledby="contact-title">
           <div className="contact-glow" aria-hidden="true" />

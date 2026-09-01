@@ -174,11 +174,8 @@ function HorizontalCard({
   const r1 = center;
   const r2 = Math.min(1, center + radius);
 
-  const rawScale = useTransform(scrollYProgress, [r0, r1, r2], [0.93, 1.0, 0.93]);
-  const rawOpacity = useTransform(scrollYProgress, [r0, r1, r2], [0.7, 1.0, 0.7]);
-
+  const rawScale = useTransform(scrollYProgress, [r0, r1, r2], [0.95, 1.0, 0.95]);
   const scale = useSpring(rawScale, { stiffness: 90, damping: 20 });
-  const opacity = useSpring(rawOpacity, { stiffness: 90, damping: 20 });
 
   if (isMobile || reduced) {
     return (
@@ -201,7 +198,6 @@ function HorizontalCard({
       className="projects-horizontal-card-wrap"
       style={{
         scale,
-        opacity,
       }}
     >
       <article
@@ -297,7 +293,7 @@ export function ProjectsSection({
           </div>
 
           <motion.p
-            className="eyebrow"
+            className="eyebrow projects-header-eyebrow"
             variants={eyebrowVariants}
             initial="hidden"
             whileInView="visible"

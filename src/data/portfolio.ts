@@ -3,11 +3,6 @@ export interface NavItem {
   href: string;
 }
 
-export interface NavItem {
-  label: string;
-  href: string;
-}
-
 export interface SocialLink {
   label: string;
   href: string;
@@ -248,18 +243,11 @@ export const skillGroups: SkillGroup[] = [
 
 export const verifiedTimeline: TimelineItem[] = [
   {
-    date: "2026 — Present",
-    title: "Full-Stack Developer & Technical Lead",
-    org: "Srinivas Institute of Technology Student Projects",
+    date: "2023",
+    title: "Open Source Contributor & Builder",
+    org: "Self-Directed Engineering",
     description:
-      "Architecting and shipping web platforms including BloodLink. Collaborating on system design, database schemas, and clean frontend UI implementation.",
-  },
-  {
-    date: "September 2024 — Present",
-    title: "Media Coordinator",
-    org: "Nexus Clubs",
-    description:
-      "Handle event photography and create promotional posters and visual content for club events.",
+      "Built experimental speech interaction interfaces, web tools, and algorithmic visualizers while exploring modern full-stack workflows.",
   },
   {
     date: "2023 — 2027",
@@ -269,11 +257,18 @@ export const verifiedTimeline: TimelineItem[] = [
       "Deep-diving into software engineering fundamentals, database systems, web development frameworks, and AI integration research.",
   },
   {
-    date: "2023",
-    title: "Open Source Contributor & Builder",
-    org: "Self-Directed Engineering",
+    date: "September 2024 — Present",
+    title: "Media Coordinator",
+    org: "Nexus Clubs",
     description:
-      "Built experimental speech interaction interfaces, web tools, and algorithmic visualizers while exploring modern full-stack workflows.",
+      "Handle event photography and create promotional posters and visual content for club events.",
+  },
+  {
+    date: "2026 — Present",
+    title: "Full-Stack Developer & Technical Lead",
+    org: "Srinivas Institute of Technology Student Projects",
+    description:
+      "Architecting and shipping web platforms including BloodLink. Collaborating on system design, database schemas, and clean frontend UI implementation.",
   },
 ];
 
@@ -318,11 +313,21 @@ export const certifications: Certification[] = [
     category: "Cloud Computing",
     href: "/certificates/cloud%20computing%20.pdf",
   },
+  {
+    name: "Deloitte Technology Job Simulation",
+    issuer: "Deloitte / Forage",
+    year: "2026",
+    detail: "Practical technology simulation covering software architecture, development, and business solutions.",
+    category: "Technology Consulting",
+    href: "/certificates/deloitte.pdf",
+  },
 ];
 
 export const currentFocus: string[] = [
   "Production Full-Stack Architecture & Next.js Systems",
   "Generative AI Application Engineering & Agentic Tools",
   "FinTech Systems & Distributed Data Pipelines",
+  "Quantitative Finance — Algorithmic trading, portfolio management, and systematic strategies",
+  "Business — Understanding how technology, finance, and business connect",
   "Accessibility & High-Performance UI Motion Design",
 ];
