@@ -27,6 +27,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 import SmoothScroll from "@/components/SmoothScroll";
 import IntroLoader from "@/components/IntroLoader";
 import ScrollSection from "@/components/ScrollSection";
+import { ProjectsSection } from "@/components/portfolio/ProjectsSection";
+import { ExperienceSection } from "@/components/portfolio/ExperienceSection";
 import {
   certifications,
   Certification,
@@ -71,108 +73,7 @@ function IconForLink({ label }: { label: string }) {
 }
 
 
-function ProjectCard({
-  project,
-  index,
-  onOpen,
-  reduced,
-}: {
-  project: Project;
-  index: number;
-  onOpen: (project: Project) => void;
-  reduced: boolean | null | undefined;
-}) {
-  return (
-    <motion.article
-      className="project-ref-card"
-      {...reveal(reduced, index * 0.1)}
-      whileHover={reduced ? undefined : { y: -6 }}
-      whileTap={reduced ? undefined : { scale: 0.985 }}
-      transition={{ duration: 0.35, ease: cinematicEasing as any, delay: reduced ? 0 : index * 0.1 }}
-    >
-      {/* Top: Project Visual */}
-      <div
-        className="project-ref-card__visual"
-        onClick={() => onOpen(project)}
-        role="button"
-        tabIndex={0}
-        aria-label={`Open ${project.name} case study`}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onOpen(project);
-          }
-        }}
-        suppressHydrationWarning
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <motion.img
-          src={project.image}
-          alt={`${project.name} preview`}
-          loading="lazy"
-          className="project-ref-card__img"
-          whileHover={reduced ? undefined : { scale: 1.03 }}
-          transition={{ duration: 0.45, ease: cinematicEasing as any }}
-          suppressHydrationWarning
-        />
-      </div>
 
-      {/* Bottom: Project Information */}
-      <div className="project-ref-card__body">
-        <div className="project-ref-card__meta">
-          <span className="project-ref-card__category">{project.category || project.kicker}</span>
-          <span className="project-ref-card__year">{project.year || "2026"}</span>
-        </div>
-
-        <div className="project-ref-card__header">
-          <h3
-            className="project-ref-card__title"
-            onClick={() => onOpen(project)}
-            title={`View ${project.name} details`}
-            suppressHydrationWarning
-          >
-            {project.name}
-          </h3>
-          <div className="project-ref-card__actions">
-            {project.github && (
-              <a
-                href={project.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${project.name} GitHub Repository`}
-                className="project-ref-card__icon-btn"
-                title="View GitHub Repository"
-                suppressHydrationWarning
-              >
-                <Github size={16} />
-              </a>
-            )}
-            <button
-              type="button"
-              onClick={() => onOpen(project)}
-              aria-label={`Open ${project.name} case study`}
-              className="project-ref-card__icon-btn"
-              title="Open Case Study"
-              suppressHydrationWarning
-            >
-              <ArrowUpRight size={16} />
-            </button>
-          </div>
-        </div>
-
-        <p className="project-ref-card__desc">{project.description}</p>
-
-        <div className="project-ref-card__pills">
-          {project.stack.map((tech) => (
-            <span key={tech} className="project-ref-pill">
-              {tech}
-            </span>
-          ))}
-        </div>
-      </div>
-    </motion.article>
-  );
-}
 
 type ArsenalSkill = {
   name: string;
@@ -535,7 +436,7 @@ export default function Home() {
             <motion.p {...reveal(reduced, 0.24)} className="hero__lead">
               I build practical software, intelligent systems, and experiences that solve real problems.
             </motion.p>
-            <motion.div {...reveal(reduced, 0.3)} className="hero__actions">
+            <div className="hero__actions">
               <Button className="button button--primary" onClick={() => jumpTo("#projects")}>
                 View projects <ArrowDownRight size={16} />
               </Button>
@@ -548,11 +449,10 @@ export default function Home() {
               >
                 Download Resume <ArrowUpRight size={16} />
               </a>
-            </motion.div>
-            <motion.div {...reveal(reduced, 0.36)} className="hero__socials">
-              {socialLinks.map((link: SocialLink, index: number) => (
-                <motion.a
-                  {...reveal(reduced, index * 0.06)}
+            </div>
+            <div className="hero__socials">
+              {socialLinks.map((link: SocialLink) => (
+                <a
                   href={link.href}
                   key={link.label}
                   target="_blank"
@@ -563,9 +463,9 @@ export default function Home() {
                     <IconForLink label={link.label} />
                     {link.label}
                   </span>
-                </motion.a>
+                </a>
               ))}
-            </motion.div>
+            </div>
           </div>
           <motion.div {...reveal(reduced, 0.22)} className="hero__diagram" aria-hidden="true">
             <div ref={heroOrbitOneRef} className="hero__orbit hero__orbit--one parallax-layer" />
@@ -711,72 +611,9 @@ export default function Home() {
           </div>
         </ScrollSection>
 
-        <ScrollSection id="projects" className="section-shell section-shell--light projects-section" aria-labelledby="projects-title">
-          <div className="section-rail">
-            <SectionLabel index="04">projects</SectionLabel>
-            <p className="rail-note">
-              Selected systems
-              <br />
-              built with intent.
-            </p>
-          </div>
-          <div className="projects-content">
-            <motion.div {...reveal(reduced)} className="section-heading section-heading--split">
-              <div>
-                <p className="eyebrow">Work in progress, made visible</p>
-                <h2 id="projects-title">
-                  Projects with a <em>reason to exist.</em>
-                </h2>
-              </div>
-            </motion.div>
-            <div className="projects-grid">
-              {projects.map((project: Project, index: number) => (
-                <ProjectCard key={project.id} project={project} index={index} onOpen={setSelectedProject} reduced={reduced} />
-              ))}
-            </div>
+        <ProjectsSection onOpen={setSelectedProject} />
 
-          </div>
-        </ScrollSection>
-
-        <ScrollSection id="experience" className="section-shell section-shell--dark" aria-labelledby="experience-title">
-          <div className="section-rail">
-            <SectionLabel index="05">Experience</SectionLabel>
-            <p className="rail-note">
-              Learning in public,
-              <br />
-              building with intent.
-            </p>
-          </div>
-          <div className="timeline-content">
-            <motion.div {...reveal(reduced)} className="section-heading">
-              <p className="eyebrow">A workbench, not a highlight reel</p>
-              <h2 id="experience-title">
-                The work behind
-                <br />
-                <em>the work.</em>
-              </h2>
-            </motion.div>
-            <div className="timeline">
-              {verifiedTimeline.map((item: TimelineItem, index: number) => (
-                <motion.article
-                  key={`${item.title}-${item.date}`}
-                  {...reveal(reduced, index * 0.1)}
-                  className="timeline-item"
-                >
-                  <div className="timeline-item__date mono">{item.date}</div>
-                  <div className="timeline-item__marker">
-                    <span />
-                  </div>
-                  <div className="timeline-item__body">
-                    <p className="eyebrow">{item.org}</p>
-                    <h3>{item.title}</h3>
-                    <p>{item.description}</p>
-                  </div>
-                </motion.article>
-              ))}
-            </div>
-          </div>
-        </ScrollSection>
+        <ExperienceSection />
 
         <ScrollSection id="certifications" className="section-shell section-shell--light certifications-section" aria-labelledby="certifications-title">
           <div className="section-rail">
