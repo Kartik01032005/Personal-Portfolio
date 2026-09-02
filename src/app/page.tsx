@@ -195,6 +195,7 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [sent, setSent] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const messageTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [skillQuery, setSkillQuery] = useState("");
@@ -202,6 +203,14 @@ export default function Home() {
   const [openCertificationCategory, setOpenCertificationCategory] = useState<string | null>(null);
   const [showAllCertificates, setShowAllCertificates] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+
+  useEffect(() => {
+    const textarea = messageTextareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [formData.message]);
 
   const handleSubmitContact = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -641,6 +650,7 @@ export default function Home() {
                     <textarea
                       id="message"
                       name="message"
+                      ref={messageTextareaRef}
                       rows={4}
                       value={formData.message}
                       onChange={(e) =>

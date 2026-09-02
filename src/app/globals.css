@@ -1499,6 +1499,7 @@ html.dark .cert-progress-track {
 .contact-form { align-self: end; border-radius: .375rem; border: 1px solid rgba(238,241,236,.16); background: rgba(255,255,255,.035); padding: clamp(1.2rem, 3vw, 2rem); backdrop-filter: blur(8px); }
 .contact-form label { display: block; margin-bottom: 1.15rem; color: #9ba5a4; font: 600 .65rem/1 var(--font-space-grotesk), sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 .contact-form input, .contact-form textarea { display: block; width: 100%; margin-top: .55rem; border: 1px solid rgba(238,241,236,.17); border-radius: .375rem; outline: 0; background: rgba(15,20,23,.28); padding: .8rem; color: #eef1ec; font: 400 .83rem/1.4 var(--font-ibm-sans), sans-serif; transition: border .18s ease, background .18s ease; }
+.contact-form textarea { min-height: 7rem; overflow-y: hidden; resize: none; }
 .contact-form input::placeholder, .contact-form textarea::placeholder { color: #697476; }
 .contact-form input:focus, .contact-form textarea:focus { border-color: #f47c48; background: rgba(15,20,23,.52); }
 .form-submit { width: 100%; margin-top: .4rem; border: 0; border-radius: .375rem; }
@@ -3038,4 +3039,3 @@ html.dark .side-nav-social-link:hover {
     transform: scale(1.04);
   }
 }
-
