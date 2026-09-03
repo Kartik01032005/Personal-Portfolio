@@ -730,7 +730,7 @@ html.dark .projects-progress-track {
 .experience-vertical-section {
   position: relative;
   width: 100%;
-  min-height: 440vh;
+  min-height: 300vh;
   box-sizing: border-box;
 }
 
@@ -878,9 +878,9 @@ html.dark .projects-progress-track {
 .timeline-item {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(130px, 26%) 20px 1fr;
+  grid-template-columns: minmax(230px, 30%) 20px 1fr;
   gap: clamp(1rem, 2vw, 1.8rem);
-  padding-bottom: clamp(6.2rem, 11.5vh, 9.8rem);
+  padding-bottom: clamp(3.2rem, 6vh, 5rem);
   align-items: start;
 }
 .timeline-item:last-child {
@@ -949,7 +949,7 @@ html.dark .projects-progress-track {
 .timeline-item__body p:last-child {
   max-width: 540px;
   margin: 0;
-  color: #9ba5a4;
+  color: #c4cecd;
   line-height: 1.55;
   font-size: 0.86rem;
 }

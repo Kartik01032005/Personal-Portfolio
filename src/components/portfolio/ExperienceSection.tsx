@@ -68,11 +68,8 @@ function TimelineItemCard({
   const r1 = center;
   const r2 = Math.min(1, center + radius);
 
-  const rawScale = useTransform(scrollYProgress, [r0, r1, r2], [0.94, 1.0, 0.94]);
-  const rawOpacity = useTransform(scrollYProgress, [r0, r1, r2], [0.55, 1.0, 0.55]);
-
-  const scale = useSpring(rawScale, { stiffness: 90, damping: 20 });
-  const opacity = useSpring(rawOpacity, { stiffness: 90, damping: 20 });
+  const rawDescOpacity = useTransform(scrollYProgress, [r0, r1, r2], [0.7, 1.0, 0.7]);
+  const descOpacity = useSpring(rawDescOpacity, { stiffness: 90, damping: 20 });
 
   if (isMobile || reduced) {
     return (
@@ -91,13 +88,7 @@ function TimelineItemCard({
   }
 
   return (
-    <motion.article
-      className="timeline-item timeline-item--animated"
-      style={{
-        scale,
-        opacity,
-      }}
-    >
+    <article className="timeline-item timeline-item--animated">
       <div className="timeline-item__date mono">{item.date}</div>
       <div className="timeline-item__marker">
         <span />
@@ -105,9 +96,9 @@ function TimelineItemCard({
       <div className="timeline-item__body">
         <p className="eyebrow">{item.org}</p>
         <h3>{item.title}</h3>
-        <p>{item.description}</p>
+        <motion.p style={{ opacity: descOpacity }}>{item.description}</motion.p>
       </div>
-    </motion.article>
+    </article>
   );
 }
 
@@ -156,7 +147,7 @@ export function ExperienceSection() {
   // Spring smoothed upward scroll translation (moving y from 0 to -maxScrollDistance)
   const rawY = useTransform(
     scrollYProgress,
-    [0.08, 0.90],
+    [0.18, 0.96],
     [0, -maxScrollDistance]
   );
   const smoothY = useSpring(rawY, {

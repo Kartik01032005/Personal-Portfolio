@@ -270,6 +270,13 @@ export const verifiedTimeline: TimelineItem[] = [
     description:
       "Architecting and shipping web platforms including BloodLink. Collaborating on system design, database schemas, and clean frontend UI implementation.",
   },
+  {
+    date: "September 2026 — October 2026",
+    title: "Machine Learning Intern",
+    org: "Cognifyz IT Solutions Pvt. Ltd.",
+    description:
+      "Building practical machine learning solutions using real-world restaurant data, covering data preprocessing, feature analysis, regression, classification, recommendation systems, and location-based analysis.",
+  },
 ];
 
 export const certifications: Certification[] = [
