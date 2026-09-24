@@ -15,7 +15,7 @@ interface SpotlightCardProps {
 export function SpotlightCard({
   children,
   className = "",
-  spotlightColor = "rgba(244, 124, 72, 0.12)",
+  spotlightColor = "rgba(234, 91, 36, 0.12)",
   enableTilt = true,
   onClick,
   style,

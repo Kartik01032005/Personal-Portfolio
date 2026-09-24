@@ -107,7 +107,7 @@ export function AboutSection({ SectionLabel, jumpTo }: AboutSectionProps) {
           <div className="about-section-heading">
             <p className="eyebrow">Profile / foundation</p>
             <h2 id="about-title">
-              About Me<span>.</span>
+              About <span>Me.</span>
             </h2>
           </div>
           <div className="about-layout">
@@ -145,10 +145,10 @@ export function AboutSection({ SectionLabel, jumpTo }: AboutSectionProps) {
               <div className="about-actions">
                 <a
                   className="button button--primary"
-                  href="/resume.pdf"
+                  href="/kartiknilekani-resume.pdf?v=2"
                   target="_blank"
                   rel="noopener noreferrer"
-                  download="Kartik-Manjunath-Nilekani-Resume.pdf"
+                  download="kartiknilekani-resume.pdf"
                 >
                   Download Resume <ArrowUpRight size={16} />
                 </a>

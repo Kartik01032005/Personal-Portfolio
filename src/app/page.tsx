@@ -61,6 +61,40 @@ const reveal = (reduced: boolean | null | undefined, delay = 0) =>
         transition: { duration: 0.72, delay, ease: cinematicEasing as any },
       };
 
+const headingWordVariants = {
+  hidden: { opacity: 0, y: 24, scale: 0.88 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 130,
+      damping: 15,
+      mass: 0.7,
+    },
+  },
+};
+
+const arsenalHeadingWordVariants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+    scale: 0.92,
+    transition: {
+      duration: 0.32,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+  visible: {
+    ...headingWordVariants.visible,
+    transition: {
+      ...headingWordVariants.visible.transition,
+      stiffness: 150,
+    },
+  },
+};
+
 function SectionLabel({ index, children }: { index: string; children: React.ReactNode }) {
   return (
     <div className="section-label">
@@ -84,6 +118,82 @@ type ArsenalSkill = {
   name: string;
   category: string;
 };
+
+function GlowingTrailParagraph({
+  text,
+  containerRef,
+  startProgress,
+  endProgress,
+  className,
+  activeWordCount: propActiveWordCount,
+}: {
+  text: string;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  startProgress: number;
+  endProgress: number;
+  className?: string;
+  activeWordCount?: number;
+}) {
+  const reduced = useReducedMotion();
+  const words = text.split(" ");
+  const [activeWordCount, setActiveWordCount] = useState(reduced ? words.length : 0);
+
+  useEffect(() => {
+    if (reduced || propActiveWordCount !== undefined) {
+      setActiveWordCount(words.length);
+      return;
+    }
+
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const totalScrollable = rect.height - windowHeight;
+
+      let progress = 0;
+      if (totalScrollable <= 0) {
+        if (rect.top <= windowHeight * 0.65) progress = 1;
+      } else {
+        progress = Math.max(0, Math.min(1, -rect.top / totalScrollable));
+      }
+
+      if (progress >= startProgress) {
+        const normalized = Math.min(
+          1,
+          Math.max(0, (progress - startProgress) / (endProgress - startProgress))
+        );
+        const count = Math.min(
+          words.length,
+          Math.floor(normalized * (words.length + 1))
+        );
+        setActiveWordCount(count);
+      } else {
+        setActiveWordCount(0);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [containerRef, startProgress, endProgress, words.length, reduced, propActiveWordCount]);
+
+  return (
+    <p className={className}>
+      {words.map((word, i) => {
+        const isActive = i < (propActiveWordCount !== undefined ? propActiveWordCount : activeWordCount);
+        return (
+          <span
+            key={i}
+            className="glow-trail-word"
+            data-active={isActive ? "true" : "false"}
+          >
+            {word}{" "}
+          </span>
+        );
+      })}
+    </p>
+  );
+}
 
 function SkillCard({ skill, reduced }: { skill: ArsenalSkill; reduced: boolean | null | undefined }) {
   return (
@@ -189,6 +299,7 @@ export default function Home() {
   const heroSignalRef = useRef<HTMLDivElement | null>(null);
   const heroOrbitOneRef = useRef<HTMLDivElement | null>(null);
   const heroOrbitTwoRef = useRef<HTMLDivElement | null>(null);
+  const skillsContainerRef = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("about");
   const [scrolled, setScrolled] = useState(false);
@@ -203,6 +314,92 @@ export default function Home() {
   const [openCertificationCategory, setOpenCertificationCategory] = useState<string | null>(null);
   const [showAllCertificates, setShowAllCertificates] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [isArsenalActive, setIsArsenalActive] = useState(false);
+  const arsenalSettledRef = useRef(false);
+  const [activeIntroWords, setActiveIntroWords] = useState(reduced ? 16 : 0);
+  const introIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const el = document.getElementById("skills");
+    if (!el) return;
+
+    const triggerIntroGlow = () => {
+      if (introIntervalRef.current) clearInterval(introIntervalRef.current);
+      let count = 0;
+      setActiveIntroWords(0);
+      introIntervalRef.current = setInterval(() => {
+        count += 1;
+        setActiveIntroWords(count);
+        if (count >= 16) {
+          if (introIntervalRef.current) {
+            clearInterval(introIntervalRef.current);
+            introIntervalRef.current = null;
+          }
+        }
+      }, 35);
+    };
+
+    const initialRect = el.getBoundingClientRect();
+    if (initialRect.top <= (window.innerHeight || 800) * 0.45 && initialRect.bottom > 0) {
+      arsenalSettledRef.current = true;
+      setIsArsenalActive(true);
+      setActiveIntroWords(16);
+    } else {
+      setActiveIntroWords(0);
+    }
+
+    const handleScroll = () => {
+      const rect = el.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || 800;
+
+      // Section 03 reaches its exact viewport position
+      const atSectionPosition = rect.top <= viewportHeight * 0.45 && rect.bottom > 80;
+
+      if (atSectionPosition) {
+        if (!arsenalSettledRef.current) {
+          arsenalSettledRef.current = true;
+
+          // Start animation INSTANTLY from this exact point
+          setIsArsenalActive(true);
+          triggerIntroGlow();
+        }
+      } else {
+        // When scrolling backward (up reverse) past the trigger point, smoothly reverse
+        if (rect.top > viewportHeight * 0.47) {
+          if (arsenalSettledRef.current) {
+            arsenalSettledRef.current = false;
+            setIsArsenalActive(false);
+            if (introIntervalRef.current) {
+              clearInterval(introIntervalRef.current);
+              introIntervalRef.current = null;
+            }
+            setActiveIntroWords(0);
+          }
+        } else if (rect.bottom < -50) {
+          // When scrolled past section into lower sections, reset so it re-triggers on reverse scroll up
+          if (arsenalSettledRef.current) {
+            arsenalSettledRef.current = false;
+            setIsArsenalActive(false);
+            if (introIntervalRef.current) {
+              clearInterval(introIntervalRef.current);
+              introIntervalRef.current = null;
+            }
+            setActiveIntroWords(0);
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => {
+      if (introIntervalRef.current) {
+        clearInterval(introIntervalRef.current);
+        introIntervalRef.current = null;
+      }
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [reduced]);
 
   useEffect(() => {
     const textarea = messageTextareaRef.current;
@@ -375,17 +572,23 @@ export default function Home() {
       <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
         <a
           href="#top"
-          className="wordmark"
+          className="brand-logo"
           onClick={(e) => {
             e.preventDefault();
             jumpTo("#top");
           }}
-          aria-label="Kartik home"
+          aria-label="Kartik Manjunath Nilekani - Back to top"
         >
-          <span className="wordmark__mark">K</span>
-          <span>
-            Kartik<span className="wordmark__period">.</span>
-          </span>
+          <svg className="brand-logo__stripes" width="22" height="18" viewBox="0 0 22 18" fill="none" aria-hidden="true">
+            <path d="M4 18L10 0H7L1 18H4Z" fill="#EA5B24" />
+            <path d="M10 18L16 0H13L7 18H10Z" fill="#ffffff" />
+            <path d="M16 18L22 0H19L13 18H16Z" fill="#EA5B24" />
+          </svg>
+          <span className="brand-logo__badge">KMN</span>
+          <div className="brand-logo__text">
+            <span className="brand-logo__name">KARTIK</span>
+            <span className="brand-logo__sub">MANJUNATH NILEKANI</span>
+          </div>
         </a>
         <nav className={`site-nav__links ${menuOpen ? "is-open" : ""}`} aria-label="Primary navigation">
           {navItems.map((item: NavItem) => (
@@ -409,12 +612,11 @@ export default function Home() {
               jumpTo("#contact");
             }}
           >
-            Let’s connect <ArrowUpRight size={14} />
+            LET’S CONNECT <ArrowUpRight size={12} />
           </a>
         </nav>
         <div className="site-nav__controls">
           <SideNavigation activeSection={activeSection} jumpTo={jumpTo} />
-          <ThemeToggle reduced={reduced} />
         </div>
       </header>
 
@@ -437,7 +639,13 @@ export default function Home() {
               Computer science and business systems
             </motion.p>
             <motion.h1 {...reveal(reduced, 0.18)} id="hero-title">
-              Kartik Manjunath <em>Nilekani</em>
+              CURIOUS.
+              <br />
+              BUILDING.
+              <br />
+              <span className="hero__title-row">
+                ALWAYS <em>LEARNING.</em>
+              </span>
             </motion.h1>
             <motion.p {...reveal(reduced, 0.24)} className="hero__lead">
               I build practical software, intelligent systems, and experiences that solve real problems.
@@ -448,10 +656,10 @@ export default function Home() {
               </Button>
               <a
                 className="button button--ghost"
-                href="/resume.pdf"
+                href="/kartiknilekani-resume.pdf?v=2"
                 target="_blank"
                 rel="noopener noreferrer"
-                download="Kartik-Manjunath-Nilekani-Resume.pdf"
+                download="kartiknilekani-resume.pdf"
               >
                 Download Resume <ArrowUpRight size={16} />
               </a>
@@ -510,15 +718,121 @@ export default function Home() {
 
         <EducationSection SectionLabel={SectionLabel} />
 
-        <ScrollSection id="skills" className="section-shell section-shell--dark arsenal-section" aria-labelledby="skills-title">
+        <div ref={skillsContainerRef} className="arsenal-pin-container">
+          <section id="skills" className="section-shell section-shell--dark arsenal-section arsenal-section--pinned" aria-labelledby="skills-title">
           <div className="section-rail">
             <SectionLabel index="03">Technical arsenal</SectionLabel>
             <p className="rail-note">Tools chosen for<br />the work at hand.</p>
           </div>
           <div className="skills-content">
-            <motion.div {...reveal(reduced)} className="section-heading arsenal-heading">
-              <p className="eyebrow arsenal-kicker"><span style={{ color: '#f47c48' }}>03 /</span> Skills</p>
-              <h2 id="skills-title">A disciplined<br /><em>technical arsenal.</em></h2>
+            <motion.div
+              className={`arsenal-header ${isArsenalActive ? "arsenal-glow-active" : ""}`}
+              initial={reduced ? false : { opacity: 0.9, y: 10 }}
+              animate={isArsenalActive ? { opacity: 1, y: 0 } : (reduced ? undefined : { opacity: 0.9, y: 10 })}
+              transition={{ duration: 0.48, ease: cinematicEasing as any }}
+            >
+              <div className="arsenal-header__left">
+                <div className="arsenal-kicker">
+                  <span className="arsenal-kicker__index">03 /</span>
+                  <span className="arsenal-kicker__label">SKILLS</span>
+                </div>
+
+                <h2 id="skills-title" className="arsenal-display-title">
+                  <motion.span
+                    className="arsenal-display-title__solid"
+                    style={{ display: "block" }}
+                    variants={{
+                      hidden: {
+                        transition: {
+                          staggerChildren: 0.05,
+                          staggerDirection: -1,
+                        },
+                      },
+                      visible: {
+                        transition: {
+                          staggerChildren: 0.07,
+                          delayChildren: 0.06,
+                        },
+                      },
+                    }}
+                    initial="hidden"
+                    animate={isArsenalActive ? "visible" : (reduced ? "visible" : "hidden")}
+                  >
+                    <motion.span
+                      variants={arsenalHeadingWordVariants}
+                      style={{ display: "inline-block", transformOrigin: "center bottom" }}
+                    >
+                      TECHNICAL
+                    </motion.span>
+                  </motion.span>
+                  <motion.span
+                    className="arsenal-display-title__orange"
+                    style={{ display: "block" }}
+                    variants={{
+                      hidden: {
+                        transition: {
+                          staggerChildren: 0.05,
+                          staggerDirection: -1,
+                        },
+                      },
+                      visible: {
+                        transition: {
+                          staggerChildren: 0.07,
+                          delayChildren: 0.18,
+                        },
+                      },
+                    }}
+                    initial="hidden"
+                    animate={isArsenalActive ? "visible" : (reduced ? "visible" : "hidden")}
+                  >
+                    <motion.span
+                      variants={arsenalHeadingWordVariants}
+                      style={{ display: "inline-block", transformOrigin: "center bottom" }}
+                    >
+                      ARSENAL.
+                    </motion.span>
+                  </motion.span>
+                </h2>
+
+                <p className="arsenal-display-sub">
+                  TOOLS &times; TECHNOLOGIES &times; SKILLS
+                </p>
+              </div>
+
+              <div className="arsenal-header__right">
+                <div className="arsenal-header__intro">
+                  <p className="arsenal-intro-line-1">
+                    A curated set of technologies, tools, and frameworks
+                  </p>
+
+
+
+
+
+
+
+                  <p className="arsenal-intro-line-2">
+                    I work with to build, learn, and create.
+                  </p>
+
+
+
+
+
+
+
+                </div>
+
+                <div className="arsenal-manifesto">
+                  <span className="arsenal-manifesto__bar" aria-hidden="true" />
+                  <div className="arsenal-manifesto__words">
+                    <span>SAME</span>
+                    <span>TOOLS.</span>
+                    <span>BIGGER</span>
+                    <span>POSSIBILITIES.</span>
+                  </div>
+                </div>
+              </div>
             </motion.div>
             <motion.div {...reveal(reduced, 0.08)} className="arsenal-controls" aria-label="Skill search and filters">
               <label className="arsenal-search">
@@ -547,7 +861,8 @@ export default function Home() {
             </motion.div>
             {visibleSkills.length === 0 && <motion.div {...reveal(reduced)} className="arsenal-empty"><span className="mono">No match / 00</span><h3>Nothing in the current set.</h3><p>Try a different search term or return to all skills.</p><button type="button" onClick={() => { setSkillQuery(""); setActiveSkillCategory("All skills"); }} suppressHydrationWarning>Reset filters <ArrowUpRight size={14} /></button></motion.div>}
           </div>
-        </ScrollSection>
+        </section>
+        </div>
 
         <ProjectsSection onOpen={setSelectedProject} />
 
@@ -565,8 +880,55 @@ export default function Home() {
           </div>
           <div className="contact-content">
             <motion.div {...reveal(reduced)}>
-              <h2 id="contact-title">
-                Let’s build something <em>useful.</em>
+              <h2 id="contact-title" aria-label="Let’s build something useful.">
+                <motion.span
+                  style={{ display: "block" }}
+                  variants={{
+                    hidden: {},
+                    visible: {
+                      transition: {
+                        staggerChildren: 0.07,
+                        delayChildren: 0.06,
+                      },
+                    },
+                  }}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: false, amount: 0.25 }}
+                >
+                  {["Let’s", "build", "something"].map((word, index) => (
+                    <span
+                      key={`contact-heading-${index}`}
+                      style={{
+                        display: "inline-block",
+                        overflow: "visible",
+                        marginRight: "0.28em",
+                      }}
+                    >
+                      <motion.span
+                        variants={headingWordVariants}
+                        style={{
+                          display: "inline-block",
+                          color: word === "something" ? "#EA5B24" : undefined,
+                          transformOrigin: "center bottom",
+                        }}
+                      >
+                        {word}
+                      </motion.span>
+                    </span>
+                  ))}
+                  <span style={{ display: "inline-block", overflow: "visible" }}>
+                    <motion.em
+                      variants={headingWordVariants}
+                      style={{
+                        display: "inline-block",
+                        transformOrigin: "center bottom",
+                      }}
+                    >
+                      useful.
+                    </motion.em>
+                  </span>
+                </motion.span>
               </h2>
               <p>Have an opportunity, project, or idea? I’d be happy to connect.</p>
               <div className="contact-links">
@@ -694,7 +1056,7 @@ export default function Home() {
 
       <footer className="site-footer">
         <span>© 2026 Kartik Manjunath Nilekani</span>
-        <span className="footer-center">Built with intent, not noise.</span>
+        <span className="footer-center">Learn. Build. Fail. Improve. Repeat.</span>
         <a
           href="#top"
           onClick={(e) => {

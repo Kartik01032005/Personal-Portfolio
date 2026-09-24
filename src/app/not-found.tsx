@@ -10,12 +10,12 @@ export default function NotFound() {
       <div className="w-full max-w-lg p-8 border border-white/15 bg-[rgba(255,255,255,0.035)] backdrop-blur-md text-center">
         <div className="flex justify-center mb-6">
           <div className="relative">
-            <div className="absolute inset-0 bg-[#f47c48]/20 rounded-full animate-pulse" />
-            <AlertCircle className="relative h-14 w-14 text-[#f47c48]" />
+            <div className="absolute inset-0 bg-[#EA5B24]/20 rounded-full animate-pulse" />
+            <AlertCircle className="relative h-14 w-14 text-[#EA5B24]" />
           </div>
         </div>
 
-        <span className="mono text-xs text-[#f47c48] tracking-widest uppercase mb-2 block">
+        <span className="mono text-xs text-[#EA5B24] tracking-widest uppercase mb-2 block">
           Error 404 / Route Exception
         </span>
 

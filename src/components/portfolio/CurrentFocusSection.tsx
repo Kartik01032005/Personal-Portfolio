@@ -1,9 +1,28 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, Variants } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { currentFocus } from "@/data/portfolio";
+
+const headingWordVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 24,
+    scale: 0.88,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 130,
+      damping: 15,
+      mass: 0.7,
+    },
+  },
+};
 
 interface CurrentFocusSectionProps {
   SectionLabel: React.ComponentType<{ index: string; children: React.ReactNode }>;
@@ -110,10 +129,96 @@ export function CurrentFocusSection({ SectionLabel }: CurrentFocusSectionProps) 
         <div className="focus-content">
           <div className="section-heading">
             <p className="eyebrow">Currently building & learning</p>
-            <h2 id="focus-title">
-              Curious enough
-              <br />
-              to keep <em>going.</em>
+            <h2 id="focus-title" aria-label="Curious enough to keep going.">
+              <motion.span
+                style={{ display: "block" }}
+                variants={{
+                  hidden: {},
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.07,
+                      delayChildren: 0.06,
+                    },
+                  },
+                }}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: false, amount: 0.25 }}
+              >
+                {["Curious", "enough"].map((word, index) => (
+                  <span
+                    key={`focus-l1-${index}`}
+                    style={{
+                      display: "inline-block",
+                      overflow: "visible",
+                      marginRight: "0.28em",
+                    }}
+                  >
+                    <motion.span
+                      variants={headingWordVariants}
+                      style={{
+                        display: "inline-block",
+                        transformOrigin: "center bottom",
+                      }}
+                    >
+                      {word}
+                    </motion.span>
+                  </span>
+                ))}
+              </motion.span>
+
+              <motion.span
+                style={{ display: "block", color: "#EA5B24" }}
+                variants={{
+                  hidden: {},
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.07,
+                      delayChildren: 0.28,
+                    },
+                  },
+                }}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: false, amount: 0.25 }}
+              >
+                {["to", "keep"].map((word, index) => (
+                  <span
+                    key={`focus-l2-${index}`}
+                    style={{
+                      display: "inline-block",
+                      overflow: "visible",
+                      marginRight: "0.28em",
+                    }}
+                  >
+                    <motion.span
+                      variants={headingWordVariants}
+                      style={{
+                        display: "inline-block",
+                        transformOrigin: "center bottom",
+                      }}
+                    >
+                      {word}
+                    </motion.span>
+                  </span>
+                ))}
+                <span
+                  style={{
+                    display: "inline-block",
+                    overflow: "visible",
+                  }}
+                >
+                  <motion.em
+                    variants={headingWordVariants}
+                    style={{
+                      display: "inline-block",
+                      transformOrigin: "center bottom",
+                    }}
+                  >
+                    going.
+                  </motion.em>
+                </span>
+              </motion.span>
             </h2>
           </div>
           <div className="focus-list">

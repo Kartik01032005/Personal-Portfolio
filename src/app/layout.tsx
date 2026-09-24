@@ -1,10 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono, Montserrat } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import ScrollProgress from "@/components/ScrollProgress";
 import "./globals.css";
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["600", "700", "800", "900"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -57,19 +65,20 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${spaceGrotesk.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}
+      className={`dark ${spaceGrotesk.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} ${montserrat.variable}`}
     >
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(() => { try { const theme = localStorage.getItem("theme"); const isDark = theme === "dark"; document.documentElement.classList.toggle("dark", isDark); document.documentElement.style.colorScheme = isDark ? "dark" : "light"; } catch {} })();`,
+            __html: `(() => { try { document.documentElement.classList.add("dark"); document.documentElement.style.colorScheme = "dark"; localStorage.setItem("theme", "dark"); } catch {} })();`,
           }}
         />
       </head>
       <body suppressHydrationWarning>
         <ErrorBoundary>
-          <ThemeProvider defaultTheme="light" switchable>
+          <ThemeProvider defaultTheme="dark" switchable={false}>
             <TooltipProvider>
+              <ScrollProgress />
               <Toaster />
               {children}
             </TooltipProvider>

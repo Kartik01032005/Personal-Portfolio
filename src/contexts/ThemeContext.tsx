@@ -34,55 +34,31 @@ function getStoredPreference(): ThemePreference | null {
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
-  switchable = true,
 }: ThemeProviderProps) {
-  const [preference, setPreference] = useState<ThemePreference>(defaultTheme);
   const [mounted, setMounted] = useState(false);
-  const theme = preference;
 
   useEffect(() => {
     setMounted(true);
-    const stored = getStoredPreference();
-    if (stored) {
-      setPreference(stored);
-      const root = document.documentElement;
-      root.classList.toggle("dark", stored === "dark");
-      root.style.colorScheme = stored;
-    }
+    const root = document.documentElement;
+    root.classList.add("dark");
+    root.classList.remove("light");
+    root.style.colorScheme = "dark";
+    try {
+      window.localStorage.setItem("theme", "dark");
+    } catch {}
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    root.style.colorScheme = theme;
-
-    if (switchable) {
-      try {
-        window.localStorage.setItem("theme", theme);
-      } catch {
-        // Continue gracefully when storage is unavailable.
-      }
-    }
-  }, [theme, switchable, mounted]);
-
-  const setThemePreference = (nextPreference: ThemePreference) => {
-    setPreference(nextPreference);
-    const root = document.documentElement;
-    root.classList.toggle("dark", nextPreference === "dark");
-    root.style.colorScheme = nextPreference;
-    try {
-      window.localStorage.setItem("theme", nextPreference);
-    } catch {}
-  };
-
-  const toggleTheme = () => {
-    setThemePreference(theme === "light" ? "dark" : "light");
-  };
-
   return (
-    <ThemeContext.Provider value={{ theme, preference, setThemePreference, toggleTheme, switchable, mounted }}>
+    <ThemeContext.Provider
+      value={{
+        theme: "dark",
+        preference: "dark",
+        setThemePreference: () => {},
+        toggleTheme: () => {},
+        switchable: false,
+        mounted,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
