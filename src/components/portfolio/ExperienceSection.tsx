@@ -170,10 +170,6 @@ export function ExperienceSection() {
         {/* Left Side: Header & Rail Info */}
         <div className="experience-sticky-sidebar">
           <div className="section-rail" style={{ marginBottom: "1rem" }}>
-            <div className="section-label">
-              <span className="section-label__index">05 /</span>
-              <span>Experience</span>
-            </div>
             <p className="rail-note">
               Learning in public,
               <br />

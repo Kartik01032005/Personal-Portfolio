@@ -128,10 +128,13 @@ function HorizontalCertCard({
   const rawScale = useTransform(scrollYProgress, [r0, r1, r2], [0.95, 1.0, 0.95]);
   const scale = useSpring(rawScale, { stiffness: 90, damping: 20 });
 
+  const isAlgoCard = cert.name.toLowerCase().includes("algorithmic trading");
+  const cardClassName = `cert-ref-card ${isAlgoCard ? "cert-ref-card--algo" : ""}`;
+
   if (isMobile || reduced) {
     return (
       <div className="cert-horizontal-card-wrap">
-        <article className="cert-ref-card" tabIndex={0}>
+        <article className={cardClassName} tabIndex={0}>
           <CertCardInner cert={cert} />
         </article>
       </div>
@@ -145,7 +148,7 @@ function HorizontalCertCard({
         scale,
       }}
     >
-      <article className="cert-ref-card" tabIndex={0}>
+      <article className={cardClassName} tabIndex={0}>
         <CertCardInner cert={cert} />
       </article>
     </motion.div>
@@ -219,10 +222,6 @@ export function CertificationsSection() {
       <div className="cert-sticky-viewport">
         {/* Left Side: Sidebar Header & Progress Indicator */}
         <div className="cert-sticky-sidebar">
-          <div className="section-label">
-            <span className="section-label__index">06 /</span>
-            <span>certifications</span>
-          </div>
 
           <motion.p
             className="eyebrow cert-header-eyebrow"

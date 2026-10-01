@@ -96,6 +96,9 @@ const arsenalHeadingWordVariants = {
 };
 
 function SectionLabel({ index, children }: { index: string; children: React.ReactNode }) {
+  if (["01", "02", "03", "04", "05", "06", "07"].includes(index)) {
+    return null;
+  }
   return (
     <div className="section-label">
       <span className="section-label__index">{index} /</span>
@@ -299,7 +302,7 @@ export default function Home() {
   const heroSignalRef = useRef<HTMLDivElement | null>(null);
   const heroOrbitOneRef = useRef<HTMLDivElement | null>(null);
   const heroOrbitTwoRef = useRef<HTMLDivElement | null>(null);
-  const skillsContainerRef = useRef<HTMLDivElement | null>(null);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("about");
   const [scrolled, setScrolled] = useState(false);
@@ -314,92 +317,6 @@ export default function Home() {
   const [openCertificationCategory, setOpenCertificationCategory] = useState<string | null>(null);
   const [showAllCertificates, setShowAllCertificates] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
-  const [isArsenalActive, setIsArsenalActive] = useState(false);
-  const arsenalSettledRef = useRef(false);
-  const [activeIntroWords, setActiveIntroWords] = useState(reduced ? 16 : 0);
-  const introIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    const el = document.getElementById("skills");
-    if (!el) return;
-
-    const triggerIntroGlow = () => {
-      if (introIntervalRef.current) clearInterval(introIntervalRef.current);
-      let count = 0;
-      setActiveIntroWords(0);
-      introIntervalRef.current = setInterval(() => {
-        count += 1;
-        setActiveIntroWords(count);
-        if (count >= 16) {
-          if (introIntervalRef.current) {
-            clearInterval(introIntervalRef.current);
-            introIntervalRef.current = null;
-          }
-        }
-      }, 35);
-    };
-
-    const initialRect = el.getBoundingClientRect();
-    if (initialRect.top <= (window.innerHeight || 800) * 0.45 && initialRect.bottom > 0) {
-      arsenalSettledRef.current = true;
-      setIsArsenalActive(true);
-      setActiveIntroWords(16);
-    } else {
-      setActiveIntroWords(0);
-    }
-
-    const handleScroll = () => {
-      const rect = el.getBoundingClientRect();
-      const viewportHeight = window.innerHeight || 800;
-
-      // Section 03 reaches its exact viewport position
-      const atSectionPosition = rect.top <= viewportHeight * 0.45 && rect.bottom > 80;
-
-      if (atSectionPosition) {
-        if (!arsenalSettledRef.current) {
-          arsenalSettledRef.current = true;
-
-          // Start animation INSTANTLY from this exact point
-          setIsArsenalActive(true);
-          triggerIntroGlow();
-        }
-      } else {
-        // When scrolling backward (up reverse) past the trigger point, smoothly reverse
-        if (rect.top > viewportHeight * 0.47) {
-          if (arsenalSettledRef.current) {
-            arsenalSettledRef.current = false;
-            setIsArsenalActive(false);
-            if (introIntervalRef.current) {
-              clearInterval(introIntervalRef.current);
-              introIntervalRef.current = null;
-            }
-            setActiveIntroWords(0);
-          }
-        } else if (rect.bottom < -50) {
-          // When scrolled past section into lower sections, reset so it re-triggers on reverse scroll up
-          if (arsenalSettledRef.current) {
-            arsenalSettledRef.current = false;
-            setIsArsenalActive(false);
-            if (introIntervalRef.current) {
-              clearInterval(introIntervalRef.current);
-              introIntervalRef.current = null;
-            }
-            setActiveIntroWords(0);
-          }
-        }
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => {
-      if (introIntervalRef.current) {
-        clearInterval(introIntervalRef.current);
-        introIntervalRef.current = null;
-      }
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [reduced]);
 
   useEffect(() => {
     const textarea = messageTextareaRef.current;
@@ -718,24 +635,19 @@ export default function Home() {
 
         <EducationSection SectionLabel={SectionLabel} />
 
-        <div ref={skillsContainerRef} className="arsenal-pin-container">
-          <section id="skills" className="section-shell section-shell--dark arsenal-section arsenal-section--pinned" aria-labelledby="skills-title">
+
+        <section id="skills" className="section-shell section-shell--dark arsenal-section" aria-labelledby="skills-title">
           <div className="section-rail">
-            <SectionLabel index="03">Technical arsenal</SectionLabel>
             <p className="rail-note">Tools chosen for<br />the work at hand.</p>
           </div>
           <div className="skills-content">
             <motion.div
-              className={`arsenal-header ${isArsenalActive ? "arsenal-glow-active" : ""}`}
+              className="arsenal-header"
               initial={reduced ? false : { opacity: 0.9, y: 10 }}
-              animate={isArsenalActive ? { opacity: 1, y: 0 } : (reduced ? undefined : { opacity: 0.9, y: 10 })}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.48, ease: cinematicEasing as any }}
             >
               <div className="arsenal-header__left">
-                <div className="arsenal-kicker">
-                  <span className="arsenal-kicker__index">03 /</span>
-                  <span className="arsenal-kicker__label">SKILLS</span>
-                </div>
 
                 <h2 id="skills-title" className="arsenal-display-title">
                   <motion.span
@@ -756,10 +668,10 @@ export default function Home() {
                       },
                     }}
                     initial="hidden"
-                    animate={isArsenalActive ? "visible" : (reduced ? "visible" : "hidden")}
+                    animate="visible"
                   >
                     <motion.span
-                      variants={arsenalHeadingWordVariants}
+                      variants={arsenalHeadingWordVariants as any}
                       style={{ display: "inline-block", transformOrigin: "center bottom" }}
                     >
                       TECHNICAL
@@ -783,10 +695,10 @@ export default function Home() {
                       },
                     }}
                     initial="hidden"
-                    animate={isArsenalActive ? "visible" : (reduced ? "visible" : "hidden")}
+                    animate="visible"
                   >
                     <motion.span
-                      variants={arsenalHeadingWordVariants}
+                      variants={arsenalHeadingWordVariants as any}
                       style={{ display: "inline-block", transformOrigin: "center bottom" }}
                     >
                       ARSENAL.
@@ -862,7 +774,7 @@ export default function Home() {
             {visibleSkills.length === 0 && <motion.div {...reveal(reduced)} className="arsenal-empty"><span className="mono">No match / 00</span><h3>Nothing in the current set.</h3><p>Try a different search term or return to all skills.</p><button type="button" onClick={() => { setSkillQuery(""); setActiveSkillCategory("All skills"); }} suppressHydrationWarning>Reset filters <ArrowUpRight size={14} /></button></motion.div>}
           </div>
         </section>
-        </div>
+
 
         <ProjectsSection onOpen={setSelectedProject} />
 

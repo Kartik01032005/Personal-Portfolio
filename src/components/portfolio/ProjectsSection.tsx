@@ -287,10 +287,6 @@ export function ProjectsSection({
       <div className="projects-sticky-viewport">
         {/* Left Side: Sidebar Header & Counter */}
         <div className="projects-sticky-sidebar">
-          <div className="section-label">
-            <span className="section-label__index">04 /</span>
-            <span>projects</span>
-          </div>
 
           <motion.p
             className="eyebrow projects-header-eyebrow"
