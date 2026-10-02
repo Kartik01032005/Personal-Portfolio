@@ -96,7 +96,7 @@ const arsenalHeadingWordVariants = {
 };
 
 function SectionLabel({ index, children }: { index: string; children: React.ReactNode }) {
-  if (["01", "02", "03", "04", "05", "06", "07"].includes(index)) {
+  if (["01", "02", "03", "04", "05", "06", "07", "08"].includes(index)) {
     return null;
   }
   return (
@@ -638,7 +638,7 @@ export default function Home() {
 
         <section id="skills" className="section-shell section-shell--dark arsenal-section" aria-labelledby="skills-title">
           <div className="section-rail">
-            <p className="rail-note">Tools chosen for<br />the work at hand.</p>
+            <p className="rail-note">Tools chosen for <br />the work at hand.</p>
           </div>
           <div className="skills-content">
             <motion.div
@@ -724,7 +724,7 @@ export default function Home() {
 
 
                   <p className="arsenal-intro-line-2">
-                    I work with to build, learn, and create.
+                    I work to build, learn, and create.
                   </p>
 
 
@@ -787,8 +787,7 @@ export default function Home() {
         <ScrollSection id="contact" className="section-shell section-shell--contact" aria-labelledby="contact-title">
           <div className="contact-glow" aria-hidden="true" />
           <div className="section-rail contact-rail">
-            <SectionLabel index="08">Contact</SectionLabel>
-            <p className="rail-note">Open to useful<br />conversations.</p>
+            <p className="rail-note">Open to useful <br />conversations.</p>
           </div>
           <div className="contact-content">
             <motion.div {...reveal(reduced)}>

@@ -287,7 +287,7 @@ export const certifications: Certification[] = [
   },
   {
     name: "CCNA ENSA Update",
-    issuer: "Cisco",
+    issuer: "Cisco Networking Academy",
     year: "2026",
     detail: "Updated networking practice focused on Cisco Enterprise Network Architecture concepts.",
     category: "Cybersecurity & Networking",

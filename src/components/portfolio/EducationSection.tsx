@@ -5,7 +5,7 @@ interface EducationSectionProps {
 }
 
 const text3 =
-  "A multidisciplinary program blending software, computer science, data, and business fundamentals.";
+  "A multidisciplinary program blending software, data, computer science, and business fundamentals.";
 
 export function EducationSection({ SectionLabel }: EducationSectionProps) {
   return (

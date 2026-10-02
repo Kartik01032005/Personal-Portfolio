@@ -38,5 +38,5 @@ export default function useScrollParallax(
       // reset transform
       if (el) el.style.transform = "";
     };
-  }, [ref, strength]);
+  }, [ref, strength, disabled]);
 }

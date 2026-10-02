@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   devIndicators: false,
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "recharts",
+      "@radix-ui/react-icons",
+    ],
+  },
   webpack: (config, { dev }) => {
     if (dev) {
       // Use memory cache in dev: eliminates OneDrive file-locking ENOENT pack errors
