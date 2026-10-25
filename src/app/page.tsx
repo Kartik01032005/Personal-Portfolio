@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Bookmark,
   Check,
   ChevronDown,
   Github,
@@ -13,17 +12,11 @@ import {
   Loader2,
   Mail,
   Menu,
-  Moon,
-  MoveUpRight,
-  Sun,
-  Radio,
   Search,
   Send,
   X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import useScrollParallax from "@/hooks/useScrollParallax";
-import { useTheme } from "@/contexts/ThemeContext";
 import SmoothScroll from "@/components/SmoothScroll";
 import IntroLoader from "@/components/IntroLoader";
 import ScrollSection from "@/components/ScrollSection";
@@ -35,18 +28,12 @@ import { ProjectsSection } from "@/components/portfolio/ProjectsSection";
 import { ExperienceSection } from "@/components/portfolio/ExperienceSection";
 import { CertificationsSection } from "@/components/portfolio/CertificationsSection";
 import {
-  certifications,
-  Certification,
-  currentFocus,
   navItems,
   NavItem,
-  projects,
   Project,
   skillGroups,
   socialLinks,
   SocialLink,
-  verifiedTimeline,
-  TimelineItem,
 } from "@/data/portfolio";
 
 const cinematicEasing = [0.22, 1, 0.36, 1];
@@ -122,82 +109,6 @@ type ArsenalSkill = {
   category: string;
 };
 
-function GlowingTrailParagraph({
-  text,
-  containerRef,
-  startProgress,
-  endProgress,
-  className,
-  activeWordCount: propActiveWordCount,
-}: {
-  text: string;
-  containerRef: React.RefObject<HTMLDivElement | null>;
-  startProgress: number;
-  endProgress: number;
-  className?: string;
-  activeWordCount?: number;
-}) {
-  const reduced = useReducedMotion();
-  const words = text.split(" ");
-  const [activeWordCount, setActiveWordCount] = useState(reduced ? words.length : 0);
-
-  useEffect(() => {
-    if (reduced || propActiveWordCount !== undefined) {
-      setActiveWordCount(words.length);
-      return;
-    }
-
-    const handleScroll = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const totalScrollable = rect.height - windowHeight;
-
-      let progress = 0;
-      if (totalScrollable <= 0) {
-        if (rect.top <= windowHeight * 0.65) progress = 1;
-      } else {
-        progress = Math.max(0, Math.min(1, -rect.top / totalScrollable));
-      }
-
-      if (progress >= startProgress) {
-        const normalized = Math.min(
-          1,
-          Math.max(0, (progress - startProgress) / (endProgress - startProgress))
-        );
-        const count = Math.min(
-          words.length,
-          Math.floor(normalized * (words.length + 1))
-        );
-        setActiveWordCount(count);
-      } else {
-        setActiveWordCount(0);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [containerRef, startProgress, endProgress, words.length, reduced, propActiveWordCount]);
-
-  return (
-    <p className={className}>
-      {words.map((word, i) => {
-        const isActive = i < (propActiveWordCount !== undefined ? propActiveWordCount : activeWordCount);
-        return (
-          <span
-            key={i}
-            className="glow-trail-word"
-            data-active={isActive ? "true" : "false"}
-          >
-            {word}{" "}
-          </span>
-        );
-      })}
-    </p>
-  );
-}
-
 function SkillCard({ skill, reduced }: { skill: ArsenalSkill; reduced: boolean | null | undefined }) {
   return (
     <motion.article
@@ -215,88 +126,6 @@ function SkillCard({ skill, reduced }: { skill: ArsenalSkill; reduced: boolean |
   );
 }
 
-function CertificationCategoryCard({
-  category,
-  items,
-  open,
-  onToggle,
-  reduced,
-}: {
-  category: string;
-  items: Certification[];
-  open: boolean;
-  onToggle: () => void;
-  reduced: boolean | null | undefined;
-}) {
-  return (
-    <motion.article layout className={`cert-category-card ${open ? "is-open" : ""}`}>
-      <button className="cert-category-card__trigger" type="button" onClick={onToggle} aria-expanded={open} suppressHydrationWarning>
-        <span className="cert-category-card__icon"><Bookmark size={19} strokeWidth={1.5} /></span>
-        <span className="cert-category-card__name">{category}</span>
-        <span className="cert-category-card__count">{items.length.toString().padStart(2, "0")}</span>
-        <ChevronDown className="cert-category-card__chevron" size={17} aria-hidden="true" />
-      </button>
-      <AnimatePresence initial={false}>{open && (
-        <motion.div
-          initial={reduced ? false : { opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={reduced ? undefined : { opacity: 0, height: 0 }}
-          transition={{ duration: reduced ? 0 : 0.3, ease: cinematicEasing as any }}
-          className="cert-category-card__details"
-        >
-          {items.map((cert) => (
-            <div className="cert-category-card__item" key={cert.name}>
-              <div><strong>{cert.name}</strong><span>{cert.issuer} / {cert.year}</span><small>{cert.detail}</small></div>
-              <a href={cert.href} target="_blank" rel="noopener noreferrer" aria-label={`View certificate for ${cert.name}`}><ArrowUpRight size={15} /></a>
-            </div>
-          ))}
-        </motion.div>
-      )}</AnimatePresence>
-    </motion.article>
-  );
-}
-
-function ThemeToggle({ reduced }: { reduced: boolean | null }) {
-  const { theme, toggleTheme, mounted } = useTheme();
-
-  return (
-    <motion.div
-      className="theme-toggle"
-      whileTap={reduced ? undefined : { scale: 0.94 }}
-      data-theme={mounted ? theme : "light"}
-      role="radiogroup"
-      aria-label="Theme selector"
-      suppressHydrationWarning
-    >
-      <button
-        type="button"
-        className={`theme-toggle__option${mounted && theme === "light" ? " is-active" : ""}`}
-        onClick={() => { if (mounted && theme !== "light") toggleTheme(); }}
-        aria-label="Switch to light mode"
-        aria-checked={mounted ? theme === "light" : true}
-        role="radio"
-        suppressHydrationWarning
-      >
-        <Sun size={15} />
-      </button>
-      <button
-        type="button"
-        className={`theme-toggle__option${mounted && theme === "dark" ? " is-active" : ""}`}
-        onClick={() => { if (mounted && theme !== "dark") toggleTheme(); }}
-        aria-label="Switch to dark mode"
-        aria-checked={mounted ? theme === "dark" : false}
-        role="radio"
-        suppressHydrationWarning
-      >
-        <Moon size={15} />
-      </button>
-      <span className="sr-only" suppressHydrationWarning>
-        {mounted ? `Current theme: ${theme}. Click the other icon to switch.` : "Theme toggle"}
-      </span>
-    </motion.div>
-  );
-}
-
 export default function Home() {
   const reduced = useReducedMotion();
   const heroSignalRef = useRef<HTMLDivElement | null>(null);
@@ -308,15 +137,17 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [sent, setSent] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", message: "", website: "" });
   const messageTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [skillQuery, setSkillQuery] = useState("");
   const [activeSkillCategory, setActiveSkillCategory] = useState("All skills");
-  const [openCertificationCategory, setOpenCertificationCategory] = useState<string | null>(null);
-  const [showAllCertificates, setShowAllCertificates] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+
+  const handleIntroComplete = useCallback(() => {
+    setShowIntro(false);
+  }, []);
 
   useEffect(() => {
     const textarea = messageTextareaRef.current;
@@ -372,6 +203,7 @@ export default function Home() {
           name: trimmedName,
           email: trimmedEmail,
           message: trimmedMessage,
+          website: formData.website.trim(),
         }),
       });
 
@@ -384,7 +216,7 @@ export default function Home() {
         return;
       }
 
-      setFormData({ name: "", email: "", message: "" });
+      setFormData({ name: "", email: "", message: "", website: "" });
       setSent(true);
     } catch {
       setFormError("Something went wrong. Please try again.");
@@ -393,30 +225,35 @@ export default function Home() {
     }
   };
 
-    const arsenalSkills = useMemo<ArsenalSkill[]>(
-      () => skillGroups.flatMap((group) => group.items.map((name) => ({
-        name,
-        category: group.label,
-      }))),
+  const arsenalSkills = useMemo<ArsenalSkill[]>(
+    () =>
+      skillGroups.flatMap((group) =>
+        group.items.map((name) => ({
+          name,
+          category: group.label,
+        }))
+      ),
     []
   );
-  const skillCategories = useMemo(() => ["All skills", ...skillGroups.filter((group) => group.items.length > 0).map((group) => group.label)], []);
+  const skillCategories = useMemo(
+    () => [
+      "All skills",
+      ...skillGroups
+        .filter((group) => group.items.length > 0)
+        .map((group) => group.label),
+    ],
+    []
+  );
   const visibleSkills = useMemo(() => {
     const query = skillQuery.trim().toLowerCase();
     return arsenalSkills.filter((skill) => {
-      const matchesCategory = activeSkillCategory === "All skills" || skill.category === activeSkillCategory;
+      const matchesCategory =
+        activeSkillCategory === "All skills" ||
+        skill.category === activeSkillCategory;
       const searchable = [skill.name, skill.category].join(" ").toLowerCase();
       return matchesCategory && (!query || searchable.includes(query));
     });
   }, [activeSkillCategory, arsenalSkills, skillQuery]);
-
-  const certificationGroups = useMemo(() => {
-    return certifications.reduce<Record<string, Certification[]>>((groups, certification) => {
-      const category = certification.category || "Other credentials";
-      groups[category] = groups[category] ? [...groups[category], certification] : [certification];
-      return groups;
-    }, {});
-  }, []);
 
   const sections = useMemo(
     () => ["about", "education", "skills", "projects", "experience", "certifications", "contact"],
@@ -484,7 +321,7 @@ export default function Home() {
 
   return (
     <div className="site-shell" suppressHydrationWarning>
-      {showIntro && <IntroLoader onComplete={() => setShowIntro(false)} />}
+      {showIntro && <IntroLoader onComplete={handleIntroComplete} />}
       <SmoothScroll />
       <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
         <a
@@ -568,9 +405,9 @@ export default function Home() {
               I build practical software, intelligent systems, and experiences that solve real problems.
             </motion.p>
             <div className="hero__actions">
-              <Button className="button button--primary" onClick={() => jumpTo("#projects")}>
+              <button type="button" className="button button--primary" onClick={() => jumpTo("#projects")}>
                 View projects <ArrowDownRight size={16} />
-              </Button>
+              </button>
               <a
                 className="button button--ghost"
                 href="/kartiknilekani-resume.pdf?v=2"
@@ -884,6 +721,20 @@ export default function Home() {
                 </div>
               ) : (
                 <>
+                  <div className="sr-only" aria-hidden="true" style={{ display: "none" }}>
+                    <label htmlFor="website">Website</label>
+                    <input
+                      id="website"
+                      name="website"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={formData.website}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, website: e.target.value }))
+                      }
+                    />
+                  </div>
                   <label htmlFor="name">
                     Name
                     <input

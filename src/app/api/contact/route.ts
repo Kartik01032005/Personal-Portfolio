@@ -4,14 +4,50 @@ import { Resend } from "resend";
 // Email validation regex (RFC 5322 standard compliant simplified)
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+// In-memory sliding window rate limiting (5 requests per hour per client IP)
+const rateLimitMap = new Map<string, number[]>();
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MAX = 5;
+
+function isRateLimited(clientIp: string): boolean {
+  const now = Date.now();
+  const timestamps = rateLimitMap.get(clientIp) || [];
+  const validTimestamps = timestamps.filter((time) => now - time < RATE_LIMIT_WINDOW_MS);
+
+  if (validTimestamps.length >= RATE_LIMIT_MAX) {
+    rateLimitMap.set(clientIp, validTimestamps);
+    return true;
+  }
+
+  validTimestamps.push(now);
+  rateLimitMap.set(clientIp, validTimestamps);
+  return false;
+}
+
 interface ContactRequestBody {
   name?: unknown;
   email?: unknown;
   message?: unknown;
+  website?: unknown; // Honeypot field for bot prevention
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // Check client rate limit
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const realIp = request.headers.get("x-real-ip");
+    const clientIp = (forwardedFor ? forwardedFor.split(",")[0] : realIp) || "127.0.0.1";
+
+    if (isRateLimited(clientIp.trim())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many requests. Please try again later.",
+        },
+        { status: 429 }
+      );
+    }
+
     let body: ContactRequestBody;
 
     try {
@@ -23,7 +59,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, message } = body;
+    const { name, email, message, website } = body;
+
+    // Honeypot check: If the hidden honeypot field is filled, silently succeed without sending
+    if (typeof website === "string" && website.trim().length > 0) {
+      return NextResponse.json(
+        { success: true, message: "Message sent successfully" },
+        { status: 200 }
+      );
+    }
 
     // Validate name
     if (typeof name !== "string" || !name.trim()) {
@@ -102,15 +146,18 @@ export async function POST(request: NextRequest) {
           error:
             "Email service is not configured. Please set the RESEND_API_KEY environment variable.",
         },
-        { status: 500 }
+        { status: 503 }
       );
     }
 
     const toEmail =
       process.env.CONTACT_EMAIL || "kartiknilekani568@gmail.com";
 
-    // Extract sender email address from FROM_EMAIL (e.g. onboarding@resend.dev)
-    const rawFrom = process.env.FROM_EMAIL || "onboarding@resend.dev";
+    // Extract sender email address from RESEND_FROM_EMAIL or FROM_EMAIL (e.g. onboarding@resend.dev)
+    const rawFrom =
+      process.env.RESEND_FROM_EMAIL ||
+      process.env.FROM_EMAIL ||
+      "onboarding@resend.dev";
     const match = rawFrom.match(/<([^>]+)>/);
     const fromAddress = match ? match[1] : rawFrom.trim();
 

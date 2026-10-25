@@ -7,14 +7,36 @@ import ScrollProgress from "@/components/ScrollProgress";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://kartiknilekani.dev"
+  ),
   title: "Kartik Manjunath Nilekani | Computer Science & Business Systems Engineer",
   description:
     "Kartik Manjunath Nilekani is a Computer Science & Business Systems Engineer building practical software, intelligent systems, and thoughtful digital experiences.",
+  keywords: [
+    "Kartik Manjunath Nilekani",
+    "Kartik Nilekani",
+    "Full-Stack Developer",
+    "Computer Science Engineer",
+    "Business Systems",
+    "Portfolio",
+    "AI",
+    "Next.js",
+  ],
+  authors: [{ name: "Kartik Manjunath Nilekani" }],
+  creator: "Kartik Manjunath Nilekani",
   openGraph: {
     title: "Kartik Manjunath Nilekani | Computer Science & Business Systems Engineer",
     description:
       "Engineering practical products across full-stack development, AI, data, and modern web technologies.",
     type: "website",
+    siteName: "Kartik Manjunath Nilekani Portfolio",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kartik Manjunath Nilekani | Computer Science & Business Systems Engineer",
+    description:
+      "Engineering practical products across full-stack development, AI, data, and modern web technologies.",
   },
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23151b20'/><path d='M8 6V26M8 16L18 6M11 13L20 26' stroke='%23f47c48' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/><circle cx='20' cy='26' r='2' fill='%23f47c48'/></svg>",
@@ -47,7 +69,20 @@ export default function RootLayout({
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(() => { try { document.documentElement.classList.add("dark"); document.documentElement.style.colorScheme = "dark"; localStorage.setItem("theme", "dark"); } catch {} })();`,
+            __html: `(() => {
+              try {
+                document.documentElement.classList.add("dark");
+                document.documentElement.style.colorScheme = "dark";
+                localStorage.setItem("theme", "dark");
+              } catch {}
+              if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                  for (const registration of registrations) {
+                    registration.unregister();
+                  }
+                }).catch(() => {});
+              }
+            })();`,
           }}
         />
       </head>

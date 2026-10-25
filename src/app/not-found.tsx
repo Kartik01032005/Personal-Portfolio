@@ -28,12 +28,12 @@ export default function NotFound() {
         </p>
 
         <div className="flex justify-center">
-          <Link href="/">
-            <Button className="button button--primary flex items-center gap-2 cursor-pointer">
+          <Button asChild className="button button--primary flex items-center gap-2 cursor-pointer">
+            <Link href="/">
               <ArrowLeft className="w-4 h-4" />
               Return Home
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

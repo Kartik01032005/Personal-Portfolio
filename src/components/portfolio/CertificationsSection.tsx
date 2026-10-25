@@ -134,7 +134,7 @@ function HorizontalCertCard({
   if (isMobile || reduced) {
     return (
       <div className="cert-horizontal-card-wrap">
-        <article className={cardClassName} tabIndex={0}>
+        <article className={cardClassName}>
           <CertCardInner cert={cert} />
         </article>
       </div>
@@ -148,7 +148,7 @@ function HorizontalCertCard({
         scale,
       }}
     >
-      <article className={cardClassName} tabIndex={0}>
+      <article className={cardClassName}>
         <CertCardInner cert={cert} />
       </article>
     </motion.div>

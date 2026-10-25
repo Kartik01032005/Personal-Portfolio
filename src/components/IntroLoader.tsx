@@ -11,10 +11,12 @@ export default function IntroLoader({ onComplete }: IntroLoaderProps) {
   const reduced = useReducedMotion();
   const [isVisible, setIsVisible] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     if (reduced) {
-      onComplete();
+      onCompleteRef.current();
       return;
     }
 
@@ -30,14 +32,14 @@ export default function IntroLoader({ onComplete }: IntroLoaderProps) {
 
     // Complete transition and unmount at exactly 3.0s
     const completeTimer = setTimeout(() => {
-      onComplete();
+      onCompleteRef.current();
     }, 3000);
 
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(completeTimer);
     };
-  }, [reduced, onComplete]);
+  }, [reduced]);
 
   if (reduced) return null;
 

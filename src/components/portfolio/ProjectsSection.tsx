@@ -180,13 +180,7 @@ function HorizontalCard({
   if (isMobile || reduced) {
     return (
       <div className="projects-horizontal-card-wrap">
-        <article
-          className="project-ref-card"
-          tabIndex={0}
-          role="button"
-          aria-label={`Open ${project.name} case study`}
-          suppressHydrationWarning
-        >
+        <article className="project-ref-card" suppressHydrationWarning>
           <ProjectCardInner project={project} onOpen={onOpen} />
         </article>
       </div>
@@ -200,13 +194,7 @@ function HorizontalCard({
         scale,
       }}
     >
-      <article
-        className="project-ref-card"
-        tabIndex={0}
-        role="button"
-        aria-label={`Open ${project.name} case study`}
-        suppressHydrationWarning
-      >
+      <article className="project-ref-card" suppressHydrationWarning>
         <ProjectCardInner project={project} onOpen={onOpen} />
       </article>
     </motion.div>
