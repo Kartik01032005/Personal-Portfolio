@@ -36,6 +36,8 @@ export function AboutSection({ SectionLabel, jumpTo }: AboutSectionProps) {
             <img
               src="/profile.jpg"
               alt="Kartik Manjunath Nilekani"
+              width={365}
+              height={365}
               className="about-portrait__img"
               loading="lazy"
             />

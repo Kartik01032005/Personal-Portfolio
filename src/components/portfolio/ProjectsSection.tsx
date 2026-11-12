@@ -77,6 +77,8 @@ function ProjectCardInner({
         <motion.img
           src={project.image}
           alt={`${project.name} preview`}
+          width={1024}
+          height={576}
           loading="lazy"
           className="project-ref-card__img"
           whileHover={reduced ? undefined : { scale: 1.03 }}

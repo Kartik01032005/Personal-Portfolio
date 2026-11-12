@@ -132,8 +132,7 @@ export default function Home() {
   const heroOrbitOneRef = useRef<HTMLDivElement | null>(null);
   const heroOrbitTwoRef = useRef<HTMLDivElement | null>(null);
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("about");
+  const [activeSection, setActiveSection] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [sent, setSent] = useState(false);
@@ -261,7 +260,12 @@ export default function Home() {
   );
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 24);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 24);
+      if (window.scrollY < 180) {
+        setActiveSection("");
+      }
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     const observer = new IntersectionObserver(
       (entries) =>
@@ -284,7 +288,6 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setSelectedProject(null);
-        setMenuOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -307,7 +310,6 @@ export default function Home() {
   }, [selectedProject]);
 
   const jumpTo = (href: string) => {
-    setMenuOpen(false);
     if (typeof window !== "undefined" && window.__lenis && !reduced) {
       window.__lenis.scrollTo(href, {
         offset: 0,
@@ -320,12 +322,13 @@ export default function Home() {
   };
 
   return (
-    <div className="site-shell" suppressHydrationWarning>
+    <>
       {showIntro && <IntroLoader onComplete={handleIntroComplete} />}
+      <div className="site-shell" suppressHydrationWarning>
       <SmoothScroll />
       <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
         <a
-          href="#top"
+          href="/"
           className="brand-logo"
           onClick={(e) => {
             e.preventDefault();
@@ -344,7 +347,7 @@ export default function Home() {
             <span className="brand-logo__sub">MANJUNATH NILEKANI</span>
           </div>
         </a>
-        <nav className={`site-nav__links ${menuOpen ? "is-open" : ""}`} aria-label="Primary navigation">
+        <nav className="site-nav__links" aria-label="Primary navigation">
           {navItems.map((item: NavItem) => (
             <a
               key={item.href}
@@ -423,8 +426,8 @@ export default function Home() {
                 <a
                   href={link.href}
                   key={link.label}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target={link.href.startsWith("mailto:") ? undefined : "_blank"}
+                  rel={link.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
                   aria-label={`${link.label} — ${link.note}`}
                 >
                   <span className="motion-link-content">
@@ -681,7 +684,14 @@ export default function Home() {
               <p>Have an opportunity, project, or idea? I’d be happy to connect.</p>
               <div className="contact-links">
                 {socialLinks.map((link: SocialLink, index: number) => (
-                  <motion.a {...reveal(reduced, index * 0.05)} href={link.href} key={link.label} target="_blank" rel="noopener noreferrer">
+                  <motion.a
+                    {...reveal(reduced, index * 0.05)}
+                    href={link.href}
+                    key={link.label}
+                    target={link.href.startsWith("mailto:") ? undefined : "_blank"}
+                    rel={link.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+                    aria-label={`${link.label} — ${link.note}`}
+                  >
                     <span className="motion-link-content">
                       <IconForLink label={link.label} />
                       {link.label}
@@ -741,9 +751,10 @@ export default function Home() {
                       id="name"
                       name="name"
                       value={formData.name}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, name: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        if (formError) setFormError(null);
+                        setFormData((prev) => ({ ...prev, name: e.target.value }));
+                      }}
                       placeholder="Your name"
                       required
                       minLength={2}
@@ -759,9 +770,10 @@ export default function Home() {
                       name="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, email: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        if (formError) setFormError(null);
+                        setFormData((prev) => ({ ...prev, email: e.target.value }));
+                      }}
                       placeholder="you@example.com"
                       required
                       maxLength={254}
@@ -777,9 +789,10 @@ export default function Home() {
                       ref={messageTextareaRef}
                       rows={4}
                       value={formData.message}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, message: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        if (formError) setFormError(null);
+                        setFormData((prev) => ({ ...prev, message: e.target.value }));
+                      }}
                       placeholder="Tell me about the opportunity or idea..."
                       required
                       minLength={5}
@@ -825,6 +838,7 @@ export default function Home() {
             e.preventDefault();
             jumpTo("#top");
           }}
+          aria-label="Back to top"
         >
           Back to top <ArrowUpRight size={14} />
         </a>
@@ -916,5 +930,6 @@ export default function Home() {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }

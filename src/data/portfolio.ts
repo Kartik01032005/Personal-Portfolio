@@ -216,10 +216,6 @@ export const skillGroups: SkillGroup[] = [
     ],
   },
   {
-    label: "AI & Intelligent Systems",
-    items: [],
-  },
-  {
     label: "Databases & Cloud",
     items: [
       "MongoDB",
@@ -227,14 +223,6 @@ export const skillGroups: SkillGroup[] = [
       "Docker Fundamentals",
       "Power BI",
     ],
-  },
-  {
-    label: "Systems & Design",
-    items: [],
-  },
-  {
-    label: "Core Engineering",
-    items: [],
   },
 ];
 

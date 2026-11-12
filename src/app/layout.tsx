@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://kartiknilekani.dev"
   ),
-  title: "Kartik Manjunath Nilekani | Computer Science & Business Systems Engineer",
+  title: "Kartik Manjunath Nilekani | Developer Portfolio",
   description:
-    "Kartik Manjunath Nilekani is a Computer Science & Business Systems Engineer building practical software, intelligent systems, and thoughtful digital experiences.",
+    "Kartik Manjunath Nilekani is a developer building practical software, intelligent systems, and modern digital experiences. Explore featured projects, engineering skills, and background.",
   keywords: [
     "Kartik Manjunath Nilekani",
     "Kartik Nilekani",
@@ -22,25 +22,75 @@ export const metadata: Metadata = {
     "Portfolio",
     "AI",
     "Next.js",
+    "TypeScript",
+    "React",
   ],
-  authors: [{ name: "Kartik Manjunath Nilekani" }],
+  authors: [{ name: "Kartik Manjunath Nilekani", url: "https://kartiknilekani.dev" }],
   creator: "Kartik Manjunath Nilekani",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "Kartik Manjunath Nilekani | Computer Science & Business Systems Engineer",
+    title: "Kartik Manjunath Nilekani | Developer Portfolio",
     description:
-      "Engineering practical products across full-stack development, AI, data, and modern web technologies.",
-    type: "website",
+      "Kartik Manjunath Nilekani is a developer building practical software, intelligent systems, and modern digital experiences.",
+    url: "https://kartiknilekani.dev",
     siteName: "Kartik Manjunath Nilekani Portfolio",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/profile.jpg",
+        width: 800,
+        height: 800,
+        alt: "Kartik Manjunath Nilekani",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kartik Manjunath Nilekani | Computer Science & Business Systems Engineer",
+    title: "Kartik Manjunath Nilekani | Developer Portfolio",
     description:
-      "Engineering practical products across full-stack development, AI, data, and modern web technologies.",
+      "Kartik Manjunath Nilekani is a developer building practical software, intelligent systems, and modern digital experiences.",
+    images: ["/profile.jpg"],
   },
   icons: {
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23151b20'/><path d='M8 6V26M8 16L18 6M11 13L20 26' stroke='%23f47c48' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/><circle cx='20' cy='26' r='2' fill='%23f47c48'/></svg>",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/icon.svg",
   },
+};
+
+const personStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Kartik Manjunath Nilekani",
+  url: "https://kartiknilekani.dev",
+  image: "https://kartiknilekani.dev/profile.jpg",
+  jobTitle: "Computer Science & Business Systems Engineer",
+  alumniOf: {
+    "@type": "EducationalOrganization",
+    name: "Srinivas Institute of Technology",
+  },
+  sameAs: [
+    "https://github.com/Kartik01032005",
+    "https://www.linkedin.com/in/kartik-nilekani-287a6329b/",
+  ],
+  knowsAbout: [
+    "Full-Stack Development",
+    "Software Engineering",
+    "React",
+    "Next.js",
+    "TypeScript",
+    "Node.js",
+    "Artificial Intelligence",
+    "Machine Learning",
+    "PostgreSQL",
+    "MongoDB",
+  ],
 };
 
 export const viewport: Viewport = {
@@ -66,6 +116,12 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Montserrat:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
           rel="stylesheet"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(personStructuredData),
+          }}
         />
         <script
           dangerouslySetInnerHTML={{
